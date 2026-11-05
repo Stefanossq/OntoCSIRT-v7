@@ -1,0 +1,79 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+#############################################################################
+# OntoCSIRT v7 - extensao para ingestao de dados reais e alertas SOAR.
+# So ACRESCENTA axiomas: nao altera nada do OntoCSIRT_v7.ttl, cuja avaliacao
+# (LOOCV, CQ, mutacoes) continua reprodutivel sem esta extensao.
+# Usada por ingest_real_cases.py, validar_ingestao.py e soar_webhook.py.
+#############################################################################
+
+<http://www.semanticweb.org/ontocsirt/ext> a owl:Ontology ;
+    owl:versionInfo "ext-2" ;   # ext-1: versao original; ext-2: m001 + proveniencia da aquisicao assistida
+    rdfs:label "OntoCSIRT v7 - extensao de ingestao (KEV, ATT&CK, NVD) e SOAR" ;
+    rdfs:comment "Acrescenta vocabulario de proveniencia; os dados ingeridos nao sao desfechos de incidentes." .
+
+# --- ator desconhecido (VERIS actor.Unknown) --------------------------------
+# O KEV nao identifica atores. Em vez de inventar um, cada caso recebe um ator
+# proprio desta classe: "desconhecido" nao significa "o mesmo", por isso nao se
+# reutiliza um individuo unico (evita que a R4 ligue todos os casos entre si).
+:UnknownActor a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Ator desconhecido"@pt ;
+    rdfs:comment "Ator nao identificado na fonte (VERIS actor.Unknown)." ; :verisCategory "actor.Unknown" .
+[] a owl:AllDisjointClasses ; owl:members ( :ExternalActor :InternalActor :PartnerActor :UnknownActor ) .
+
+# --- categorias de fraqueza adicionais (frequentes no KEV) -----------------
+:MemorySafetyWeakness a owl:Class ; rdfs:subClassOf :Weakness ; rdfs:label "Seguranca de memoria"@pt ;
+    rdfs:comment "Ex.: CWE-416, CWE-787, CWE-119, CWE-122, CWE-125, CWE-843. Categoria deste trabalho." .
+:OtherWeakness a owl:Class ; rdfs:subClassOf :Weakness ; rdfs:label "Outra fraqueza"@pt ;
+    rdfs:comment "CWE sem categoria propria neste trabalho (ex.: CWE-20 generico). Categoria residual." .
+[] a owl:AllDisjointClasses ; owl:members ( :InjectionWeakness :WebClientWeakness :AccessControlWeakness
+    :AuthenticationWeakness :ResourceHandlingWeakness :RequestForgeryWeakness :MemorySafetyWeakness :OtherWeakness ) .
+
+# --- proveniencia e identificadores externos -------------------------------
+:attackId a owl:DatatypeProperty ; rdfs:label "identificador ATT&CK"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:string .
+:mappedTechnique a owl:ObjectProperty ; rdfs:label "tecnica mapeada (adicional)"@pt ;
+    rdfs:domain :Vulnerability ; rdfs:range :AttackPattern ;
+    rdfs:comment "Outras tecnicas de exploracao do mapeamento CTID KEV->ATT&CK, alem da usada na acao." .
+# Propriedade de ANOTACAO (proveniencia): xsd:date nao pertence ao mapa de tipos do OWL 2, por isso
+# como DatatypeProperty com range xsd:date o modulo saia do OWL 2 DL e o HermiT recusava-o
+# (UnsupportedDatatypeException). Em anotacoes o literal xsd:date e valido; o SHACL continua a exigi-lo.
+:kevDateAdded a owl:AnnotationProperty ; rdfs:label "data de inclusao no KEV"@pt ;
+    rdfs:comment "Data em que a CVE entrou no catalogo KEV (metadado de proveniencia; nao participa no raciocinio)." .
+:kevRequiredAction a owl:DatatypeProperty ; rdfs:label "acao exigida pelo KEV (texto)"@pt ; rdfs:domain :Case ; rdfs:range xsd:string .
+:knownRansomwareUse a owl:DatatypeProperty ; rdfs:label "uso conhecido em ransomware (KEV)"@pt ; rdfs:domain :Vulnerability ; rdfs:range xsd:string .
+:vendorProduct a owl:DatatypeProperty ; rdfs:label "fornecedor e produto (KEV)"@pt ; rdfs:domain :Asset ; rdfs:range xsd:string .
+:assetTypeEvidence a owl:AnnotationProperty ; rdfs:label "evidencia do tipo de ativo"@pt .
+:otherCweIds a owl:AnnotationProperty ; rdfs:label "outros CWE listados (separados por espaco)"@pt .
+:solutionProvenance a owl:DatatypeProperty ; rdfs:label "proveniencia da solucao"@pt ; rdfs:domain :Case ; rdfs:range xsd:string ;
+    rdfs:comment "De onde vem hasSolution: 'policy:cwe-category-v1' (sugestao derivada da politica) ou 'kev:requiredAction' (normalizacao do texto do KEV). Nunca e um desfecho observado." .
+:kevSolution a owl:ObjectProperty ; rdfs:label "acao normalizada do KEV"@pt ; rdfs:domain :Case ; rdfs:range :ResolutionAction ;
+    rdfs:comment "Normalizacao do requiredAction do KEV; guardada a parte para comparacao com a sugestao da politica." .
+
+# --- proveniencia por campo na aquisicao assistida (ontoevo/enrich.py) -----
+# Valores: "kev", "nvd", "ctid", "heuristica" ou "gemini:<modelo>:<chave da cache> | verificado: <catalogo>".
+:cweSource a owl:AnnotationProperty ; rdfs:label "origem da CWE"@pt .
+:techniqueSource a owl:AnnotationProperty ; rdfs:label "origem da tecnica ATT&CK"@pt .
+:assetTypeSource a owl:AnnotationProperty ; rdfs:label "origem do tipo de ativo"@pt .
+:acquisitionRun a owl:AnnotationProperty ; rdfs:label "execucao de aquisicao"@pt .
+
+# --- casos adquiridos (ontoevo/cases.py) -----------------------------------
+# solutionProvenance passa a ter 4 valores: policy:cwe-category-v1, kev:requiredAction,
+# llm:case-analysis-v1 (adaptacao do Gemini sobre os casos recuperados; hipotese, nao desfecho) e
+# analyst:retain (acao aprovada por um analista para um alerta real: o unico desfecho observado).
+:solutionRationale a owl:AnnotationProperty ; rdfs:label "justificativa da solucao"@pt .
+:responseStep a owl:AnnotationProperty ; rdfs:label "passo de resposta"@pt .
+:analysisConfidence a owl:AnnotationProperty ; rdfs:label "confianca declarada da analise (nao calibrada)"@pt .
+:retainedFrom a owl:AnnotationProperty ; rdfs:label "alerta de origem do caso retido"@pt .
+:retainedBy a owl:AnnotationProperty ; rdfs:label "analista que aprovou a solucao retida"@pt .
+:retrievedNeighbor a owl:AnnotationProperty ; rdfs:label "caso recuperado usado na adaptacao"@pt .
+
+# --- alertas recebidos pelo webhook SOAR -----------------------------------
+:sourceAddress a owl:DatatypeProperty ; rdfs:label "endereco de origem"@pt ; rdfs:domain :ThreatActor ; rdfs:range xsd:string .
+:alertId a owl:DatatypeProperty ; rdfs:label "identificador do alerta"@pt ; rdfs:domain :Incident ; rdfs:range xsd:string .
+
+# --- acoes adicionais usadas pela normalizacao do KEV ----------------------
+:CoA_Decommission a :ResolutionAction ; rdfs:label "Descontinuar o produto (fim de vida)" .
+:CoA_ApplyMitigation a :ResolutionAction ; rdfs:label "Aplicar mitigacao do fornecedor" .

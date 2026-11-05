@@ -1,0 +1,295 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Case_CVE_2025_27038 a :Case ;
+    :hasProblem :Incident_CVE_2025_27038 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_27363 a :Case ;
+    :hasProblem :Incident_CVE_2025_27363 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_32709 a :Case ;
+    :hasProblem :Incident_CVE_2025_32709 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_5777 a :Case ;
+    :hasProblem :Incident_CVE_2025_5777 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_6554 a :Case ;
+    :hasProblem :Incident_CVE_2025_6554 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_6558 a :Case ;
+    :hasProblem :Incident_CVE_2025_6558 ;
+    :hasSolution :CoA_Patch ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:AP_T1068 a :AttackPattern ;
+    rdfs:label "T1068 Exploitation for Privilege Escalation (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1068> ;
+    :attackId "T1068" .
+
+:AP_T1204_002 a :AttackPattern ;
+    rdfs:label "T1204.002 Malicious File (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1204/002> ;
+    :attackId "T1204.002" .
+
+:Act_CVE_2025_27038 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_27038 ;
+    :instantiatesPattern :AP_T1203 ;
+    :techniqueSource "ctid" .
+
+:Act_CVE_2025_27363 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_27363 ;
+    :instantiatesPattern :AP_T1204_002 ;
+    :techniqueSource "ctid" .
+
+:Act_CVE_2025_32709 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_32709 ;
+    :instantiatesPattern :AP_T1068 ;
+    :techniqueSource "ctid" .
+
+:Act_CVE_2025_5777 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_5777 ;
+    :instantiatesPattern :AP_T1190 ;
+    :techniqueSource "ctid" .
+
+:Act_CVE_2025_6554 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_6554 ;
+    :instantiatesPattern :AP_T1189 ;
+    :techniqueSource "ctid" .
+
+:Act_CVE_2025_6558 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_6558 ;
+    :instantiatesPattern :AP_T1189 ;
+    :techniqueSource "ctid" .
+
+:Actor_Unknown_CVE_2025_27038 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-27038)" .
+
+:Actor_Unknown_CVE_2025_27363 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-27363)" .
+
+:Actor_Unknown_CVE_2025_32709 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-32709)" .
+
+:Actor_Unknown_CVE_2025_5777 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-5777)" .
+
+:Actor_Unknown_CVE_2025_6554 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-6554)" .
+
+:Actor_Unknown_CVE_2025_6558 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-6558)" .
+
+:Asset_Citrix_NetScaler_ADC_and_Gateway a :Gateway ;
+    rdfs:label "Citrix NetScaler ADC and Gateway" ;
+    :assetTypeEvidence "heuristica: 'netscaler' -> Gateway" ;
+    :assetTypeSource "heuristica" ;
+    :vendorProduct "Citrix NetScaler ADC and Gateway" .
+
+:Asset_FreeType_FreeType a :Server ;
+    rdfs:label "FreeType FreeType" ;
+    :assetTypeEvidence "heuristica: sem regra -> Server (padrao)" ;
+    :assetTypeSource "heuristica (padrao; sem Gemini)" ;
+    :vendorProduct "FreeType FreeType" .
+
+:Asset_Google_Chromium a :Workstation ;
+    rdfs:label "Google Chromium" ;
+    :assetTypeEvidence "heuristica: 'chromium' -> Workstation" ;
+    :assetTypeSource "heuristica" ;
+    :vendorProduct "Google Chromium" .
+
+:Asset_Google_Chromium_V8 a :Workstation ;
+    rdfs:label "Google Chromium V8" ;
+    :assetTypeEvidence "heuristica: 'chromium' -> Workstation" ;
+    :assetTypeSource "heuristica" ;
+    :vendorProduct "Google Chromium V8" .
+
+:Asset_Microsoft_Windows a :Workstation ;
+    rdfs:label "Microsoft Windows" ;
+    :assetTypeEvidence "heuristica: 'windows' -> Workstation" ;
+    :assetTypeSource "heuristica" ;
+    :vendorProduct "Microsoft Windows" .
+
+:Asset_Qualcomm_Multiple_Chipsets :assetTypeSource "heuristica (padrao; sem Gemini)" .
+
+:CWE_125 a :MemorySafetyWeakness ;
+    rdfs:label "CWE-125" ;
+    :cweId "CWE-125" .
+
+:CWE_20 a :OtherWeakness ;
+    rdfs:label "CWE-20" ;
+    :cweId "CWE-20" .
+
+:CWE_787 a :MemorySafetyWeakness ;
+    rdfs:label "CWE-787" ;
+    :cweId "CWE-787" .
+
+:CWE_843 a :MemorySafetyWeakness ;
+    rdfs:label "CWE-843" ;
+    :cweId "CWE-843" .
+
+:Incident_CVE_2025_27038 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-27038 em Qualcomm Multiple Chipsets (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_27038 ;
+    :hasActor :Actor_Unknown_CVE_2025_27038 ;
+    :hasAsset :Asset_Qualcomm_Multiple_Chipsets ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_27038 .
+
+:Incident_CVE_2025_27363 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-27363 em FreeType FreeType (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_27363 ;
+    :hasActor :Actor_Unknown_CVE_2025_27363 ;
+    :hasAsset :Asset_FreeType_FreeType ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_27363 .
+
+:Incident_CVE_2025_32709 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-32709 em Microsoft Windows (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_32709 ;
+    :hasActor :Actor_Unknown_CVE_2025_32709 ;
+    :hasAsset :Asset_Microsoft_Windows ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_32709 .
+
+:Incident_CVE_2025_5777 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-5777 em Citrix NetScaler ADC and Gateway (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_5777 ;
+    :hasActor :Actor_Unknown_CVE_2025_5777 ;
+    :hasAsset :Asset_Citrix_NetScaler_ADC_and_Gateway ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_5777 .
+
+:Incident_CVE_2025_6554 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-6554 em Google Chromium V8 (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_6554 ;
+    :hasActor :Actor_Unknown_CVE_2025_6554 ;
+    :hasAsset :Asset_Google_Chromium_V8 ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_6554 .
+
+:Incident_CVE_2025_6558 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-6558 em Google Chromium (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_6558 ;
+    :hasActor :Actor_Unknown_CVE_2025_6558 ;
+    :hasAsset :Asset_Google_Chromium ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_6558 .
+
+:AP_T1189 a :AttackPattern ;
+    rdfs:label "T1189 Drive-by Compromise (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1189> ;
+    :attackId "T1189" .
+
+:CWE_416 a :MemorySafetyWeakness ;
+    rdfs:label "CWE-416" ;
+    :cweId "CWE-416" .
+
+:Vuln_CVE_2025_27038 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-27038> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:19" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-27038" ;
+    :cvssBaseScore 7.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_416 ;
+    :kevDateAdded "2025-06-03"^^xsd:date ;
+    :knownRansomwareUse "Unknown" .
+
+:Vuln_CVE_2025_27363 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-27363> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:27" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-27363" ;
+    :cvssBaseScore 8.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_787 ;
+    :kevDateAdded "2025-05-06"^^xsd:date ;
+    :knownRansomwareUse "Unknown" .
+
+:Vuln_CVE_2025_32709 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-32709> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:23" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-32709" ;
+    :cvssBaseScore 7.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_416 ;
+    :kevDateAdded "2025-05-13"^^xsd:date ;
+    :knownRansomwareUse "Unknown" .
+
+:Vuln_CVE_2025_5777 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-5777> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:12" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-5777" ;
+    :cvssBaseScore 7.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_125 ;
+    :kevDateAdded "2025-07-10"^^xsd:date ;
+    :knownRansomwareUse "Known" .
+
+:Vuln_CVE_2025_6554 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-6554> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:15" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-6554" ;
+    :cvssBaseScore 8.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_843 ;
+    :kevDateAdded "2025-07-02"^^xsd:date ;
+    :knownRansomwareUse "Unknown" ;
+    :mappedTechnique :AP_T1203 .
+
+:Vuln_CVE_2025_6558 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-6558> ;
+    :acquisitionRun "ontoevo.enrich 2026-11-03T03:10:08" ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-6558" ;
+    :cvssBaseScore 8.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :cweSource "kev" ;
+    :hasWeakness :CWE_20 ;
+    :kevDateAdded "2025-07-22"^^xsd:date ;
+    :knownRansomwareUse "Unknown" ;
+    :mappedTechnique :AP_T1203 .
+
+:AP_T1203 a :AttackPattern ;
+    rdfs:label "T1203 Exploitation for Client Execution (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1203> ;
+    :attackId "T1203" .
+

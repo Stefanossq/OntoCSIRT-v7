@@ -1,0 +1,153 @@
+{
+  "env": {
+    "python": "3.13.2",
+    "rdflib": "7.6.0",
+    "owlready2": "0.46",
+    "java": "openjdk version \"17.0.13\" 2024-10-15",
+    "ttl": "OntoCSIRT_v7.ttl",
+    "ttl_sha256": "8c2fc5f00faee4bf5a4b8e38a96d8ed2b92da8f28c825f49eda68a80b1720e69"
+  },
+  "generated": "2026-11-04T00:34:30",
+  "A_base": {
+    "structure": {
+      "triples": 1323,
+      "classes": 28,
+      "object_properties": 17,
+      "data_properties": 6,
+      "max_depth": 2,
+      "weakness_categories": 6,
+      "incidents": 24,
+      "cases": 24,
+      "case_provenance": {
+        "historico (artigo)": 24
+      },
+      "cves": 6,
+      "cwes": 13,
+      "attack_techniques": 0,
+      "evo_version": "-"
+    },
+    "reasoning": {
+      "hermit_consistent": true,
+      "hermit_unsat": 0,
+      "hermit_seconds": 0.93,
+      "pellet_consistent": true,
+      "pellet_seconds": 1.92,
+      "pellet_inferred": 217,
+      "shacl_conforms": true,
+      "shacl_violations": 0,
+      "shacl_shapes": "v7"
+    },
+    "cq": "8/8",
+    "loocv_acc1": 0.688
+  },
+  "B_real": {
+    "structure": {
+      "triples": 1710,
+      "classes": 33,
+      "object_properties": 19,
+      "data_properties": 13,
+      "max_depth": 3,
+      "weakness_categories": 10,
+      "incidents": 19,
+      "cases": 19,
+      "case_provenance": {
+        "policy:cwe-category-v1": 13,
+        "historico (artigo)": 6
+      },
+      "cves": 19,
+      "cwes": 21,
+      "attack_techniques": 10,
+      "evo_version": "evo-2"
+    },
+    "reasoning": {
+      "hermit_consistent": true,
+      "hermit_unsat": 0,
+      "hermit_seconds": 1.03,
+      "pellet_consistent": true,
+      "pellet_seconds": 1.76,
+      "pellet_inferred": 72,
+      "shacl_conforms": true,
+      "shacl_violations": 0,
+      "shacl_shapes": "all"
+    }
+  },
+  "regression_cq": "8/8",
+  "open_signals": 5,
+  "C_realtime": {
+    "structure": {
+      "triples": 1721,
+      "classes": 33,
+      "object_properties": 19,
+      "data_properties": 13,
+      "max_depth": 3,
+      "weakness_categories": 10,
+      "incidents": 19,
+      "cases": 19,
+      "case_provenance": {
+        "policy:cwe-category-v1": 13,
+        "historico (artigo)": 6
+      },
+      "cves": 20,
+      "cwes": 21,
+      "attack_techniques": 10,
+      "evo_version": "evo-2"
+    },
+    "reasoning": {
+      "hermit_consistent": true,
+      "hermit_unsat": 0,
+      "hermit_seconds": 1.06,
+      "pellet_consistent": true,
+      "pellet_seconds": 1.7,
+      "pellet_inferred": 72,
+      "shacl_conforms": true,
+      "shacl_violations": 0,
+      "shacl_shapes": "all"
+    }
+  },
+  "realtime": {
+    "cve": "CVE-2024-3400",
+    "nvd_mode": "api (rede real)",
+    "nvd_http": [
+      {
+        "cve": "CVE-2024-3400",
+        "status": 200,
+        "seconds": 1.05
+      }
+    ],
+    "nvd_fetch_seconds": 1.05,
+    "enrichment": {
+      "vulnerability": "Vuln_CVE_2024_3400",
+      "cwe": "CWE-77",
+      "category": "CommandInjectionWeakness",
+      "cvss": 10.0,
+      "cvss_version": "3.1",
+      "vuln_status": "Analyzed",
+      "triples": 11,
+      "seconds": 4.07,
+      "gate": {
+        "shacl_conforms": true,
+        "hermit": {
+          "consistent": true,
+          "seconds": 1.05,
+          "unsatisfiable_classes": []
+        }
+      }
+    },
+    "alert1": {
+      "seconds": 7.34,
+      "pellet_seconds": 1.93,
+      "risk": "Critical",
+      "action": "CoA_Patch",
+      "playbook": "open_patch_ticket",
+      "confidence": 0.359,
+      "requires_human_approval": true
+    },
+    "alert2": {
+      "seconds": 3.08,
+      "pellet_seconds": 1.83,
+      "risk": "Critical",
+      "action": "CoA_Patch",
+      "nvd_enrichment": null
+    }
+  }
+}

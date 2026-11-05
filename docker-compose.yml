@@ -1,0 +1,22 @@
+# docker compose up --build -d      (precisa de um ficheiro .env: copie .env.example)
+services:
+  webhook:
+    build: .
+    image: ontocsirt-webhook:7
+    container_name: ontocsirt-webhook
+    # so na maquina local; para o SOAR noutra maquina troque por "8088:8088" (o token continua obrigatorio)
+    ports:
+      - "127.0.0.1:8088:8088"
+    environment:
+      ONTOCSIRT_TOKEN: ${ONTOCSIRT_TOKEN:?defina ONTOCSIRT_TOKEN no ficheiro .env}
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ontocsirt-data:/app/data      # OntoCSIRT_v7_acquired.ttl: ramos do NVD e casos retidos
+      - ontocsirt-cache:/app/cache    # cache/nvd_<CVE>.json (24 h), KEV, CTID, catalogos CWE/ATT&CK
+    mem_limit: 3g                     # o Owlready2 da 2 GB de heap ao Java do Pellet/HermiT
+    restart: unless-stopped
+
+volumes:
+  ontocsirt-data:
+  ontocsirt-cache:

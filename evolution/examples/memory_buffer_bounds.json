@@ -1,0 +1,22 @@
+{
+ "kind": "new_class",
+ "signal_id": "heterogeneous:MemorySafetyWeakness",
+ "class_name": "MemoryBufferBoundsWeakness",
+ "parent": "MemorySafetyWeakness",
+ "label_pt": "Violacao dos limites de buffer de memoria",
+ "label_en": "Memory buffer bounds violation",
+ "definition": "Fraqueza de seguranca de memoria em que uma operacao le ou escreve fora dos limites do buffer a que tem acesso (ramo oficial CWE-119 da vista de pesquisa 1000).",
+ "disjoint_with_siblings": false,
+ "members": [
+  {"individual": "CWE_787", "justification": "CWE-787 Out-of-bounds Write: ChildOf CWE-119"},
+  {"individual": "CWE_125", "justification": "CWE-125 Out-of-bounds Read: ChildOf CWE-119"},
+  {"individual": "CWE_416", "justification": "CWE-416 Use After Free: ChildOf CWE-825, ChildOf CWE-119"}
+ ],
+ "rationale": "Na base real, 3 das 4 CWEs de MemorySafetyWeakness (CVE-2025-5777, CVE-2025-27038, CVE-2025-32709, CVE-2025-27363, CVE-2024-53197) descendem de CWE-119; CWE-843 (confusao de tipos, CVE-2025-6554) pertence ao ramo CWE-704. A subcategoria torna a similaridade do CBR mais fina (Wu-Palmer) sem alterar a politica de resposta, que e herdada (CoA_Patch).",
+ "evidence": [
+  {"source": "cwe", "ref": "CWE-119", "note": "Improper Restriction of Operations within the Bounds of a Memory Buffer (CWE 5.0)"},
+  {"source": "cwe", "ref": "CWE-843", "note": "Type Confusion: ChildOf CWE-704, fora do ramo CWE-119"},
+  {"source": "signal", "ref": "heterogeneous:MemorySafetyWeakness", "note": "3 de 4 CWEs sob CWE-119"}
+ ],
+ "confidence": 0.8
+}

@@ -1,0 +1,111 @@
+{
+  "sources": {
+    "kev_catalogVersion": "2026.10.30",
+    "ctid_attack_version": "16.1",
+    "ctid_mapping_version": "07/28/2025",
+    "nvd": "API 2.0 (cache em cache/nvd)"
+  },
+  "params": {
+    "limit": 3,
+    "strategy": "stratified",
+    "mode": "replace-synthetic",
+    "label": "cwe-policy",
+    "kev_file": null,
+    "ctid_file": null,
+    "nvd_mirror": null,
+    "nvd_api_key": false,
+    "refresh": false,
+    "pellet": true,
+    "out": "OntoCSIRT_v7_real.ttl",
+    "staging": "staging_ingest.ttl"
+  },
+  "removed_synthetic": [
+    "Incident_07",
+    "Incident_08",
+    "Incident_09",
+    "Incident_10",
+    "Incident_11",
+    "Incident_12",
+    "Incident_13",
+    "Incident_14",
+    "Incident_15",
+    "Incident_16",
+    "Incident_17",
+    "Incident_18",
+    "Incident_19",
+    "Incident_20",
+    "Incident_21",
+    "Incident_22",
+    "Incident_23",
+    "Incident_24"
+  ],
+  "ingested": 3,
+  "rejected": [],
+  "incidents_total": 9,
+  "label_distribution": {
+    "CoA_AccessControlFix": 1,
+    "CoA_RotateCredentials": 1,
+    "CoA_Isolate": 1
+  },
+  "category_distribution": {
+    "AccessControlWeakness": 1,
+    "AuthenticationWeakness": 1,
+    "InjectionWeakness": 1
+  },
+  "asset_type_distribution": {
+    "Server": 3
+  },
+  "policy_vs_kev_agreement": "0/3",
+  "leakage_check_loocv": {
+    "n_cases": 9,
+    "acc1_similarity": 0.111,
+    "acc1_majority": 0.0
+  },
+  "caveats": [
+    "Registos KEV sao avisos de exploracao, nao incidentes com desfecho observado.",
+    "hasSolution e sugestao da politica CWE->acao; nao e decisao de um analista.",
+    "Com --label cwe-policy, avaliar a recuperacao contra estes rotulos e circular (o CWE e atributo e rotulo).",
+    "Ator = VERIS Unknown (KEV nao identifica atores); tipo de ativo por heuristica de produto."
+  ],
+  "cases": [
+    {
+      "cve": "CVE-2025-21480",
+      "cwe": "CWE-863",
+      "category": "AccessControlWeakness",
+      "technique": "T1055",
+      "asset": "Asset_Qualcomm_Multiple_Chipsets",
+      "asset_type": "Server",
+      "cvss": 8.6,
+      "cvss_version": "3.1",
+      "attribute": "State_Confidentiality",
+      "policy_action": "CoA_AccessControlFix",
+      "kev_action": "CoA_ApplyMitigation"
+    },
+    {
+      "cve": "CVE-2025-49706",
+      "cwe": "CWE-287",
+      "category": "AuthenticationWeakness",
+      "technique": "T1190",
+      "asset": "Asset_Microsoft_SharePoint",
+      "asset_type": "Server",
+      "cvss": 6.5,
+      "cvss_version": "3.1",
+      "attribute": "State_Confidentiality",
+      "policy_action": "CoA_RotateCredentials",
+      "kev_action": "CoA_Decommission"
+    },
+    {
+      "cve": "CVE-2025-20337",
+      "cwe": "CWE-74",
+      "category": "InjectionWeakness",
+      "technique": "T1106",
+      "asset": "Asset_Cisco_Identity_Services_Engine",
+      "asset_type": "Server",
+      "cvss": 10.0,
+      "cvss_version": "3.1",
+      "attribute": "State_Confidentiality",
+      "policy_action": "CoA_Isolate",
+      "kev_action": "CoA_ApplyMitigation"
+    }
+  ]
+}

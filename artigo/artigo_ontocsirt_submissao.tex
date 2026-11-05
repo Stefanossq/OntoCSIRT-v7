@@ -1,0 +1,383 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs,tabularx,array,amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,shapes.geometric}
+
+\newcommand{\oc}[1]{\texttt{#1}}
+\input{numbers_v7}
+\input{numbers_lifecycle}
+\sloppy
+
+\title{OntoCSIRT: Ontologia OWL com Regras SWRL e Recuperação de Casos para Resposta a Incidentes de Cibersegurança, com Ciclo de Vida Verificado}
+
+\author{Stefano Camargo\inst{1}}
+
+\address{Programa de Pós-Graduação em Ciência da Computação\\
+[Instituição] -- [Cidade] -- [UF] -- Brasil
+\email{stefanocamargo.3@gmail.com}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Ontology-based decision support for incident response has combined OWL, SWRL rules and case-based reasoning (CBR), but published systems are validated mostly by expert agreement or illustrative scenarios, keep part of their conceptualization outside the ontology, and treat the case base as static. This paper presents OntoCSIRT, an OWL~2~DL ontology that models incidents with the VERIS A4 elements, CVE/CWE and response cases, with eight SWRL rules and two defined classes. Case retrieval uses a similarity function computed from the ontology's own class hierarchy. Every claim is checked by a reproducible protocol: 8/8 competency questions, 20/20 rule tests, and 10/10 injected defects detected by Pellet and SHACL, with HermiT confirming a consistent TBox. In leave-one-out retrieval over 24 cases, top-1 accuracy was 0.69, against 0.29 for the majority class and 0.25 for the previous version. The ontology was then put in operation: data from CISA KEV, NVD and ATT\&CK enter through a SHACL and HermiT gate, a SOAR webhook enriches unknown CVEs in real time, and structural changes proposed by an analyst or a language model are compiled into a restricted OWL grammar and applied only after reasoner checks and human approval. The analysis is grounded on Gruber's notion of ontologies as portable specifications of ontological commitments.
+\end{abstract}
+
+\begin{resumo}
+Sistemas de apoio à decisão para resposta a incidentes já combinam OWL, regras SWRL e raciocínio baseado em casos (CBR), mas costumam ser validados por concordância de especialistas ou por cenários ilustrativos, guardam parte da conceitualização fora da ontologia e tratam a base de casos como estática. Este artigo apresenta a OntoCSIRT, uma ontologia OWL~2~DL que modela incidentes pelos elementos A4 do VERIS, por CVE/CWE e por casos de resposta, com oito regras SWRL e duas classes definidas. A recuperação de casos usa uma similaridade calculada a partir da própria hierarquia de classes da ontologia. Cada afirmação é conferida por um protocolo reprodutível: 8/8 questões de competência, 20/20 testes de regras e 10/10 defeitos injetados detectados pelo Pellet e pelo SHACL, com a TBox consistente segundo o HermiT. Na recuperação \emph{leave-one-out} sobre 24 casos, a acurácia no primeiro colocado foi de \accVseven{}, contra \accMaj{} da classe majoritária e \accVsix{} da versão anterior. A ontologia foi então posta em operação: dados do KEV da CISA, do NVD e do ATT\&CK entram por um portão SHACL e HermiT, um serviço para SOAR enriquece CVEs desconhecidas em tempo real e mudanças estruturais propostas por um analista ou por um modelo de linguagem são compiladas numa gramática OWL restrita e só aplicadas após verificação por raciocinadores e aprovação humana. A análise apoia-se na noção de Gruber de ontologia como especificação portável de compromissos ontológicos.
+\end{resumo}
+
+% =============================================================================
+\section{Introdução}
+\label{sec:intro}
+
+A revisão~3 da SP~800-61 do NIST passou a tratar a resposta a incidentes como parte da gestão de riscos de cibersegurança \cite{nist80061r3}. Para cada incidente, uma equipe de resposta (CSIRT) precisa saber quais ativos foram atingidos, que fraqueza foi explorada, qual é a gravidade do evento e o que foi feito em situações parecidas. Essas informações estão em vocabulários diferentes: o modelo A4 do VERIS descreve incidentes por ator, ação, ativo e atributo \cite{veris}; o STIX~2.1 descreve objetos de inteligência de ameaças \cite{stix21}; e o NVD e a CWE descrevem vulnerabilidades e fraquezas \cite{nvd,cwe}.
+
+Gruber definiu uma ontologia como a especificação explícita de uma conceitualização, cuja função é fixar os compromissos ontológicos que agentes, programas e bases de conhecimento partilham para trocar perguntas e respostas \cite{gruber1993}. Um CSIRT que integra um orquestrador (SOAR), catálogos públicos e analistas humanos é um caso desses: cada parte precisa interpretar ``incidente'', ``vulnerabilidade'' ou ``solução'' da mesma forma. Trabalhos recentes combinaram ontologias, regras SWRL e raciocínio baseado em casos (CBR) para recomendar respostas. O OntoCSD usa regras para descobrir riscos e CBR para gerar esquemas de defesa \cite{wu2024ontocsd}. Guerra, Nunes e Silva usam uma ontologia de ações de resposta e agrupamento (\emph{clustering}) para reutilizar planos de resposta \cite{guerra2025cases}. Esses trabalhos deixam em aberto quatro questões, analisadas na Seção~\ref{sec:sota}: como verificar cada inferência do sistema, e não só a opinião de especialistas sobre ele; onde fica a conceitualização que a recuperação usa; como a base de conhecimento acompanha ameaças novas; e como incorporar modelos de linguagem sem que eles escrevam diretamente na ontologia.
+
+\textbf{Problema.} Dado um incidente novo, descrito pelos seus elementos VERIS e pela vulnerabilidade envolvida, como (i) classificar a sua gravidade e o seu contexto de forma verificável, (ii) recuperar os incidentes históricos cuja resposta registrada tem mais chance de servir e (iii) manter a ontologia atualizada sem perder essas garantias?
+
+\textbf{Contribuições.}
+\begin{enumerate}
+\item uma análise do estado da arte em ontologias com regras e CBR para resposta a incidentes, organizada pelos critérios de compromisso ontológico e portabilidade de Gruber \cite{gruber1993} (Seção~\ref{sec:sota});
+\item a ontologia OntoCSIRT em OWL~2~DL, com oito regras SWRL, duas classes definidas e uma similaridade de casos derivada da própria hierarquia de classes (Seções~\ref{sec:dev} e~\ref{sec:app});
+\item um protocolo de avaliação reprodutível, com questões de competência, testes positivos e negativos das regras, injeção de defeitos e validação cruzada \emph{leave-one-out} contra quatro estratégias de base (Seção~\ref{sec:res});
+\item um ciclo de vida operacional em que dados entram por um portão SHACL e HermiT, CVEs desconhecidas são enriquecidas em tempo real e mudanças estruturais propostas por analistas ou por modelos de linguagem só são aplicadas depois de compiladas, verificadas e aprovadas (Seção~\ref{sec:ciclo}).
+\end{enumerate}
+
+A Seção~\ref{sec:fund} apresenta a fundamentação; a Seção~\ref{sec:sota}, o estado da arte e a sua análise; as Seções~\ref{sec:dev} a~\ref{sec:ciclo}, a ontologia, a sua aplicação e o seu ciclo de vida; a Seção~\ref{sec:res}, os resultados; a Seção~\ref{sec:disc}, a discussão; e a Seção~\ref{sec:conc}, as conclusões.
+
+% =============================================================================
+\section{Fundamentação}
+\label{sec:fund}
+
+\subsection{Ontologias como compromissos portáveis}
+
+Para Gruber, todo sistema baseado em conhecimento está comprometido com uma conceitualização, explícita ou não; a ontologia torna esse compromisso explícito por meio de um vocabulário de classes, relações e funções, com definições em linguagem natural e axiomas formais que restringem a sua interpretação \cite{gruber1993}. O compromisso é especificado no \emph{nível de conhecimento}: um agente compromete-se com a ontologia quando as suas ações observáveis são consistentes com ela, independentemente da sua representação interna. Gruber usa como exemplo a interface \emph{tell-and-ask}, na qual um cliente faz afirmações (\emph{tell}) e perguntas (\emph{ask}) a uma base de conhecimento tratada como caixa-preta.
+
+O problema que Gruber ataca é a portabilidade: aplicações diferentes precisam de serviços de raciocínio diferentes e, por isso, de linguagens diferentes. A sua solução, o Ontolingua, escreve as definições numa linguagem declarativa e as traduz para linguagens mais restritas. Gruber reconhece três limites dessa abordagem: a tradução é inerentemente incompleta, porque só os construtos suportados por todos os sistemas-alvo são portáveis; quando uma restrição não é traduzida, o sistema-alvo pode deixar de a impor; e a ferramenta não ajuda na tarefa intelectual de projetar a ontologia \cite{gruber1993}. Esses três limites reaparecem, trinta anos depois, no uso de OWL, SWRL e SHACL com raciocinadores diferentes (Seção~\ref{sec:portab}).
+
+\subsection{Vocabulários, linguagens e raciocínio}
+
+O VERIS descreve um incidente pelo ator, pela ação, pelo ativo e pelo atributo de segurança comprometido, e classifica os atores em externos, internos e parceiros \cite{veris}. O STIX~2.1 define objetos como \texttt{attack-pattern}, \texttt{vulnerability} e \texttt{course-of-action} \cite{stix21}. A OWL~2~DL é decidível e permite declarar disjunções, propriedades funcionais e classes definidas por condições necessárias e suficientes \cite{owl2}. A SWRL acrescenta regras de Horn com funções embutidas para comparar valores \cite{swrl}; o Pellet aplica-as apenas a indivíduos nomeados, como regras \emph{DL-safe}, o que preserva a decidibilidade \cite{motik2005,pellet}. A OWL adota a hipótese de mundo aberto e não assume nomes únicos. O SHACL valida restrições de mundo fechado, como cardinalidade mínima e vocabulários controlados, que a OWL não verifica \cite{shacl}. No CBR, um problema novo recupera casos semelhantes, cuja solução é reutilizada, revista e, se útil, retida \cite{aamodt1994}.
+
+% =============================================================================
+\section{Estado da Arte e Análise Crítica}
+\label{sec:sota}
+
+\subsection{Panorama}
+
+Há ontologias para o tratamento de incidentes, como a CSIHO \cite{moreira2018csiho} e a CIRPO, que modela atividades e comunicações do processo de resposta \cite{galadima2026cirpo}, e para incidentes em sistemas de TIC e remediação contextualizada \cite{tailhardat2024noria,kanawati2026}. Do lado do conhecimento sobre ameaças, a UCO unifica conceitos de cibersegurança \cite{syed2016uco}, o SEPSES integra CVE, CWE e CAPEC num grafo de conhecimento \cite{kiesling2019} e o D3FEND organiza contramedidas \cite{kaloroumakis2021d3fend}. Um mapeamento sistemático mostrou que ontologias centrais de segurança raramente seguem os princípios FAIR \cite{oliveira2021fair}. Mais recentemente, modelos de linguagem foram usados para planejar respostas, com atenção à redução de alucinações \cite{hammar2026}, e ontologias com SHACL serviram para validar grafos extraídos por esses modelos \cite{cotti2026ontologx}. Três trabalhos estão mais próximos da OntoCSIRT e são analisados a seguir.
+
+\subsection{Trabalhos de referência}
+
+\textbf{OntoCSD} \cite{wu2024ontocsd}. Modela em OWL cinco classes principais (sistema de informação, vulnerabilidade, ataque, medida defensiva e estado de segurança) e onze relações, num raciocínio em duas camadas: quatro regras SWRL, executadas com o HermiT no Protégé, descobrem riscos implícitos numa rede de defesa (por exemplo, propagam uma vulnerabilidade a componentes com a mesma versão ou a sub-redes conectadas); depois, o myCBR compara o resultado com os casos por 26 atributos, com pesos iguais e limiar de similaridade global de 0,9. A consistência foi avaliada por doze especialistas, que responderam a um questionário de catorze itens sobre os componentes da ontologia (coeficiente de concordância de Kendall $W=0{,}695$), e a viabilidade, por quatro cenários num sistema de defesa de redes, com uma consulta comparada a onze casos. Os próprios autores apontam que a base de casos precisa ser atualizada em tempo real e avaliada em várias dimensões, o que deixam como trabalho futuro.
+
+\textbf{Guerra, Nunes e Silva} \cite{guerra2025cases}. Propõem um arcabouço que integra CBR e agrupamento para explicar e reutilizar planos de resposta. Os incidentes são descritos por atributos derivados do IODEF~2 e do STIX~2.1; a ontologia, construída no Protégé e carregada com o Owlready2, organiza hierarquicamente as \emph{ações} de resposta e padroniza os planos, que são sequências ordenadas dessas ações. A recuperação usa similaridades locais por atributo (igualdade, limiar, intervalo e distâncias de edição) agregadas numa similaridade global, e um plano recuperado é relevante quando a sua similaridade com o plano da consulta atinge 75\%. Numa base de 354 casos reais em cinco categorias, a validação \emph{leave-one-out} obteve precisão de 81,62\% com limiar de recuperação de 75\%, e 70 incidentes novos de um centro de dados obtiveram 75,20\%; quando o analista escolhe o melhor agrupamento dos casos recuperados, a precisão chega a 95,73\%. Ficam como trabalho futuro a ponderação dos atributos da similaridade e o uso da ontologia para sugerir adaptações. A ontologia evolui pela inclusão manual de ações. O trabalho estende uma linha anterior que já propunha uma ontologia de ações de resolução e avaliava 102 casos \cite{guerra2023,nunes2019}.
+
+\textbf{Gruber} \cite{gruber1993}. Não trata de segurança, mas fornece os critérios usados nesta análise: o que está especificado explicitamente na ontologia, e não apenas na configuração de uma ferramenta; com que compromissos os agentes interagem com a base; e quanto da especificação sobrevive à tradução para os sistemas que fazem o raciocínio.
+
+\subsection{Análise}
+
+A Tabela~\ref{tab:sota} compara os dois sistemas de referência com a OntoCSIRT. Quatro lacunas emergem dessa comparação.
+
+\begin{table}[ht]
+\centering\scriptsize
+\caption{Comparação com os trabalhos de referência, nos atributos relatados nas respectivas publicações.}
+\label{tab:sota}
+\begin{tabularx}{\textwidth}{@{}p{1.9cm}XXX@{}}
+\toprule
+ & OntoCSD \cite{wu2024ontocsd} & Guerra et al. \cite{guerra2025cases} & OntoCSIRT (este trabalho)\\
+\midrule
+Papel da ontologia & Ameaças, riscos e defesas de uma rede & Hierarquia de ações de resposta (solução) & Incidente segundo VERIS A4, CVE/CWE e casos (problema)\\
+Regras & 4 SWRL (HermiT) & Não usa & 8 SWRL e 2 classes definidas (Pellet), com testes positivos e negativos\\
+Similaridade & myCBR, 26 atributos, pesos iguais, limiar 0,9 & Locais por atributo, global agregada, limiar 75\% & Derivada das classes da ontologia (Wu-Palmer); pesos fixados a priori e ablação\\
+Casos & 12 (1 consulta e 11 casos) & 354 reais e 70 incidentes novos & 24 (18 sintéticos) e 19 com CVEs reais (ingestão do KEV)\\
+Avaliação & Kendall $W=0{,}695$ (12 especialistas) e 4 cenários & \emph{Leave-one-out} e incidentes novos (precisão) & CQs, testes de regras, mutações e \emph{leave-one-out} contra 4 bases\\
+Atualização & Futura (``em tempo real'') & Manual (ações novas) & Ingestão com portão; evolução compilada, verificada e aprovada\\
+Disponibilidade & Sob pedido & Sob pedido & Artefatos e evidências com hash\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{L1 -- Verificabilidade.} A concordância entre especialistas do OntoCSD mede a aceitação do modelo, não a correção das suas inferências: nenhuma regra é testada com um caso em que não deve disparar, e nenhuma métrica de recuperação é relatada. Guerra et al. medem a recuperação com rigor, mas não usam regras. Falta um protocolo que confira cada inferência contra um resultado esperado que possa falhar.
+
+\textbf{L2 -- Conceitualização fora da ontologia.} No OntoCSD, os 26 atributos, as funções locais e os pesos da similaridade vivem na configuração do myCBR; em Guerra et al., a similaridade dos incidentes é definida por atributos e funções no código do sistema, e a ontologia entra apenas na comparação dos planos. Nos termos de Gruber, uma parte do compromisso que determina a resposta recomendada não está especificada explicitamente na ontologia nem é verificável por um raciocinador.
+
+\textbf{L3 -- Base estática ou atualizada sem garantias.} O OntoCSD deixa a atualização da base como trabalho futuro. Guerra et al. preveem a evolução da ontologia e a retenção de casos, mas feitas manualmente e sem verificação automática de consistência.
+
+\textbf{L4 -- Portabilidade e reprodutibilidade.} Os dois sistemas dependem de ambientes gráficos (Protégé, myCBR ou uma aplicação própria) e disponibilizam os dados sob pedido. Não é possível reexecutar as avaliações nem saber quais restrições sobrevivem ao raciocinador usado, que é o risco descrito por Gruber.
+
+A OntoCSIRT responde a L1 com o protocolo da Seção~\ref{sec:res}; a L2, derivando a similaridade das classes da ontologia, consultadas depois do raciocínio; a L3, com o ciclo de vida da Seção~\ref{sec:ciclo}; e a L4, com dois raciocinadores, restrições SHACL e evidências reprodutíveis. Ao mesmo tempo, Guerra et al. têm o que falta aqui: uma base grande e real e planos de resposta ordenados. O OntoCSD tem uma avaliação por especialistas que este trabalho ainda não fez.
+
+% =============================================================================
+\section{Desenvolvimento da Ontologia}
+\label{sec:dev}
+
+O desenvolvimento seguiu a METHONTOLOGY \cite{methontology}, em ciclos de especificação, conceitualização, formalização, implementação e avaliação. A versão descrita é a sétima.
+
+\subsection{Especificação}
+
+O domínio é a análise de um incidente por um CSIRT, do registro dos elementos do evento até a escolha da resposta. Os requisitos foram escritos como questões de competência (CQ) \cite{gruninger1995}, cada uma implementada como consulta SPARQL \cite{sparql11} com a resposta esperada definida antes da execução (Tabela~\ref{tab:cq}).
+
+\begin{table}[ht]
+\centering\small
+\caption{Questões de competência e número de respostas esperadas.}
+\label{tab:cq}
+\begin{tabularx}{\textwidth}{@{}lXr@{}}
+\toprule
+ID & Questão & Esperado\\
+\midrule
+CQ1 & Quais incidentes têm risco \emph{Critical}? & 9\\
+CQ2 & Quais ativos têm incidentes críticos recorrentes? & 3\\
+CQ3 & Que incidentes partilham a fraqueza do \oc{Incident\_03}? & 2\\
+CQ4 & Que soluções a regra R6 propõe para o \oc{Incident\_03}? & 2\\
+CQ5 & Que incidentes com risco à confidencialidade envolvem ator interno? & 3\\
+CQ6 & Que incidentes envolvem fraqueza de controle de acesso? & 5\\
+CQ7 & Que incidentes de injeção no servidor afetaram a confidencialidade? & 4\\
+CQ8 & Que vulnerabilidades com CVE ainda não foram verificadas contra o NVD? & 3\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Conceitualização}
+
+O incidente é a entidade central e reificada, ligada aos quatro elementos do VERIS e à vulnerabilidade envolvida (Figura~\ref{fig:modelo}). Três decisões orientaram a conceitualização. \textbf{Tipo e ocorrência separados:} um padrão de ataque (\oc{AttackPattern}) é um tipo abstrato, e a ação concreta de um incidente é um indivíduo de \oc{ThreatAction} que instancia o padrão e explora uma vulnerabilidade concreta; o padrão nunca fica ligado a um ativo específico. \textbf{Atores concretos:} as categorias do VERIS são classes disjuntas, e os atores são indivíduos dessas classes, o que distingue ``o mesmo ator'' de ``um ator da mesma categoria''. \textbf{Fraquezas com categoria:} cada CWE pertence a uma categoria (injeção no servidor, cliente web, controle de acesso, autenticação, tratamento de recursos e falsificação de requisição no servidor), usada pela similaridade.
+
+O alinhamento ao STIX e ao VERIS é declarado por propriedades de anotação (\oc{stixType}, \oc{verisCategory}), e não por equivalências OWL, porque o STIX não é publicado como ontologia e as correspondências não são exatas. É uma escolha de compromisso ontológico mínimo: a OntoCSIRT não afirma sobre o STIX mais do que o STIX afirma sobre si.
+
+\begin{figure}[ht]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\footnotesize,
+  cls/.style={rectangle,draw=black!80,fill=black!5,minimum height=0.7cm,inner sep=4pt},
+  lab/.style={fill=white,inner sep=1pt,font=\scriptsize},
+  rel/.style={-{Stealth[length=2mm]},thick},
+  sub/.style={-{Triangle[open,length=2.5mm]},thick,black!60}]
+ \node[cls,fill=black!15] (inc) at (0,0) {\textbf{Incident}};
+ \node[cls] (act) at (-5.2,0.9) {ThreatActor};
+ \node[cls] (ext) at (-7.6,2.4) {ExternalActor};
+ \node[cls] (int) at (-5.2,2.4) {InternalActor};
+ \node[cls] (par) at (-2.8,2.4) {PartnerActor};
+ \node[cls] (ta) at (0.6,2.4) {ThreatAction};
+ \node[cls] (ap) at (5.0,2.4) {AttackPattern};
+ \node[cls] (as) at (5.0,0.0) {Asset};
+ \node[cls] (st) at (-5.2,-1.2) {SecurityState};
+ \node[cls] (vu) at (1.8,-2.4) {Vulnerability};
+ \node[cls] (we) at (6.2,-2.4) {Weakness};
+ \node[cls] (ca) at (-5.2,-3.4) {Case};
+ \node[cls] (ra) at (-1.6,-4.6) {ResolutionAction};
+ \draw[sub] (ext)--(act); \draw[sub] (int)--(act); \draw[sub] (par)--(act);
+ \draw[rel] (inc)-- node[lab,pos=0.5]{hasActor} (act);
+ \draw[rel] (inc)-- node[lab,pos=0.5]{hasAction} (ta);
+ \draw[rel] (ta)-- node[lab,above=1pt]{instantiatesPattern} (ap);
+ \draw[rel] (inc)-- node[lab,above=1pt]{hasAsset} (as);
+ \draw[rel] (inc)-- node[lab,pos=0.5]{hasAttribute} (st);
+ \draw[rel] (inc)-- node[lab,pos=0.45]{involvesVulnerability} (vu);
+ \draw[rel] (ta.east) to[out=-20,in=60] node[lab,pos=0.45]{exploits} (vu.north east);
+ \draw[rel] (vu)-- node[lab,above=1pt]{hasWeakness} (we);
+ \draw[rel] (ap.east) -- ++(1.9,0) |- node[lab,pos=0.25]{relatedWeakness} (we.east);
+ \draw[rel] (ca)-- node[lab,pos=0.5]{hasProblem} (inc);
+ \draw[rel] (ca)-- node[lab,pos=0.5]{hasSolution} (ra);
+ \draw[rel] (inc)-- node[lab,pos=0.55]{mitigatedBy} (ra);
+\end{tikzpicture}}
+\caption{Núcleo da OntoCSIRT. Setas cheias são propriedades de objeto; setas com triângulo vazado, subclasses. As categorias de ativos e de fraquezas foram omitidas.}
+\label{fig:modelo}
+\end{figure}
+
+\subsection{Formalização e implementação}
+
+A ontologia foi implementada em Turtle e tem \vSevenTriples{} triplas, \vSevenClasses{} classes, \vSevenObjProps{} propriedades de objeto, \vSevenDataProps{} de dados, \vSevenAnnProps{} de anotação e \vSevenIndividuals{} indivíduos nomeados. Quatro axiomas \oc{AllDisjointClasses} tornam disjuntas as classes de topo, as categorias de ator, os tipos de ativo e as categorias de fraqueza. A pontuação CVSS é funcional, e todos os incidentes são declarados distintos com \oc{owl:AllDifferent}, condição necessária para as regras que os comparam. Duas classes são definidas em OWL, sem regras:
+\begin{align*}
+\mathit{ConfidentialityAtRisk} &\equiv \mathit{Incident} \sqcap \exists\,\mathit{hasAttribute}.\{\mathit{State\_Confidentiality}\}\\
+\mathit{CriticalRiskIncident} &\equiv \mathit{Incident} \sqcap \exists\,\mathit{hasRiskLevel}.\{\text{``Critical''}\}
+\end{align*}
+
+As regras SWRL (Tabela~\ref{tab:regras}) estão no próprio arquivo da ontologia, que é a sua única fonte. As regras R1a a R1d derivam o risco a partir do CVSS, por faixas, e o valor derivado alimenta a classificação em \emph{CriticalRiskIncident}, o que combina regras e lógica de descrição. A R3 identifica ativos com dois ou mais incidentes críticos; a R4 e a R5 relacionam incidentes com o mesmo ator concreto e com a mesma CWE; a R6 liga as regras aos casos, propondo como candidata a solução de um caso cujo problema partilha a fraqueza do incidente. Em SHACL, exige-se que todo incidente tenha os quatro elementos VERIS e uma vulnerabilidade, que toda vulnerabilidade tenha exatamente um CVSS entre 0 e 10 e uma CWE, que identificadores CVE e CWE sigam os formatos oficiais e que todo caso tenha problema e solução.
+
+\begin{table}[ht]
+\centering\small
+\caption{Regras SWRL da OntoCSIRT (forma abreviada; $\mathit{dif}$ = \texttt{differentFrom}).}
+\label{tab:regras}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+Regra & Corpo $\rightarrow$ Cabeça\\
+\midrule
+R1a & $\mathit{Incident}(i) \wedge \mathit{involvesVulnerability}(i,v) \wedge \mathit{cvssBaseScore}(v,s) \wedge s \geq 9{,}0 \rightarrow \mathit{hasRiskLevel}(i,\text{``Critical''})$\\
+R1b--d & idem com as faixas $[7{,}0;\,9{,}0)$, $[4{,}0;\,7{,}0)$ e $[0;\,4{,}0)$ para \emph{High}, \emph{Medium} e \emph{Low}\\
+R3 & $\mathit{Asset}(a) \wedge \mathit{hasAsset}(i_1,a) \wedge \mathit{hasAsset}(i_2,a) \wedge$ CVSS de $i_1$ e de $i_2 \geq 9{,}0 \wedge \mathit{dif}(i_1,i_2) \rightarrow \mathit{RecurrentlyCriticalAsset}(a)$\\
+R4 & $\mathit{Incident}(i_1) \wedge \mathit{hasActor}(i_1,x) \wedge \mathit{hasActor}(i_2,x) \wedge \mathit{dif}(i_1,i_2) \rightarrow \mathit{sharesActorWith}(i_1,i_2)$\\
+R5 & $\mathit{involvesVulnerability}(i_1,v_1) \wedge \mathit{hasWeakness}(v_1,w) \wedge \mathit{involvesVulnerability}(i_2,v_2) \wedge \mathit{hasWeakness}(v_2,w) \wedge \mathit{dif}(i_1,i_2) \rightarrow \mathit{sharesWeaknessWith}(i_1,i_2)$\\
+R6 & $\mathit{sharesWeaknessWith}(i,j) \wedge \mathit{Case}(c) \wedge \mathit{hasProblem}(c,j) \wedge \mathit{hasSolution}(c,s) \rightarrow \mathit{candidateSolution}(i,s)$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Base de conhecimento}
+
+A base de avaliação contém \vSevenIncidents{} incidentes, cada um com o seu caso. Seis vêm da versão anterior e usam CVEs reais; dezoito são sintéticos, com vulnerabilidades locais marcadas como tal. Há cinco atores fictícios, sete ativos de quatro tipos, treze CWE, onze padrões de ataque e seis ações de resolução. As soluções seguem uma política definida antes da avaliação (por exemplo, injeção no servidor com perda de confidencialidade leva a isolar o ativo, e falha de controle de acesso, a corrigir a autorização), e três casos registram exceções, isto é, decisões do analista que divergem da política. Em relação à versão~6, a versão~7 separou padrões de ações concretas, transformou o ``atacante externo'' genérico em categoria com atores concretos, trocou comentários ``STIX'' sem correspondência por anotações, corrigiu átomos SWRL com um tipo inexistente na sintaxe RDF (\texttt{swrl:ObjectPropertyAtom}) e passou de uma para quatro faixas de risco.
+
+% =============================================================================
+\section{Aplicação: Raciocínio e Recuperação de Casos}
+\label{sec:app}
+
+O processamento é feito em Python. Como o Owlready2 \cite{owlready} não lê Turtle, a ontologia é traduzida para RDF/XML com o rdflib e carregada no Owlready2, que invoca o Pellet \cite{pellet} com inferência de valores de propriedades; o Pellet aplica as regras e classifica os indivíduos na mesma execução. O grafo inferido volta ao rdflib para as consultas SPARQL. A TBox é verificada também com o HermiT \cite{hermit}, sem as regras, e as restrições com o pySHACL.
+
+\textbf{Cenário.} Um alerta registra um incidente de referência direta insegura a objeto (IDOR) na base de dados~1, feito pelo ator externo FIN-A, com perda de confidencialidade e envolvendo a CVE-2023-2065 (CWE-639). O raciocínio derivou risco \emph{\scenRisk} (R1b, CVSS 8,8), a classe \emph{ConfidentialityAtRisk}, \scenSharesW{} incidentes com a mesma fraqueza (R5), \scenSharesA{} com o mesmo ator (R4) e três soluções candidatas (R6), em \scenSec{}~s.
+
+\textbf{Recuperação ranqueada.} A R6 propõe candidatas, mas não as ordena. A similaridade usa as características que a ontologia fornece para cada incidente, com pesos fixados antes da avaliação:
+\begin{equation}
+S(q,c) = 0{,}35\,s_{W} + 0{,}15\,s_{P} + 0{,}20\,s_{A} + 0{,}20\,s_{T} + 0{,}10\,s_{X},
+\end{equation}
+em que $s_W$ vale 1 para a mesma CWE e $0{,}5$ para a mesma categoria de fraqueza; $s_P$ vale 1 para o mesmo padrão de ataque; $s_A$ vale 1 para o mesmo ativo e $0{,}7$ para o mesmo tipo; $s_T$ vale 1 para o mesmo atributo; e $s_X$ vale 1 para o mesmo ator e $0{,}5$ para a mesma categoria VERIS; nos demais casos, 0. As categorias vêm das classes da ontologia, consultadas depois do raciocínio, e a solução do caso não entra na similaridade. Ao contrário do OntoCSD e de Guerra et al., portanto, o conhecimento de que duas fraquezas ``se parecem'' está declarado na ontologia, e não na ferramenta de CBR (lacuna L2).
+
+\begin{table}[ht]
+\centering\small
+\caption{Cinco casos mais semelhantes ao incidente do cenário.}
+\label{tab:cenario}
+\input{tab_scenario}
+\end{table}
+
+O primeiro colocado (Tabela~\ref{tab:cenario}) tem o mesmo problema do incidente novo, mas a sua solução é uma das três exceções à política; as posições~2 e~4 trazem a solução prevista, corrigir a autorização. A junção da versão anterior (mesma categoria de ator ou mesma CWE) devolve \scenVsixN{} dos 24 incidentes, sem ordem.
+
+% =============================================================================
+\section{Ciclo de Vida da Ontologia em Operação}
+\label{sec:ciclo}
+
+Para apoiar um CSIRT, a ontologia precisa receber dados continuamente e, quando os dados deixam de caber na estrutura, mudar de estrutura. O ciclo adotado (Figura~\ref{fig:ciclo}) segue um princípio: as fontes autorizadas fornecem os fatos; um modelo de linguagem pode propor, mas não aplica; raciocinadores e SHACL verificam; e um analista decide. O arquivo da ontologia avaliado na Seção~\ref{sec:res} (SHA-256 iniciado por \texttt{\vSevenHash}) não é alterado. As mudanças ficam em módulos separados: uma extensão de ingestão, um módulo de evolução estrutural, que só acrescenta axiomas, e os arquivos de dados.
+
+\begin{figure}[ht]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\footnotesize,
+  box/.style={rectangle,rounded corners,draw=black!70,fill=black!6,text width=2.45cm,minimum height=1.05cm,align=center},
+  gate/.style={box,fill=black!14},
+  arr/.style={-{Stealth[length=2mm]},thick,black!70}]
+ \node[box] (s) {Fontes: KEV, NVD, ATT\&CK, CWE; alertas do SOAR};
+ \node[box,right=0.45cm of s] (i) {1. Ingestão com proveniência por campo};
+ \node[gate,right=0.45cm of i] (g) {2. Portão: SHACL e HermiT};
+ \node[box,right=0.45cm of g] (r) {3. Inferência: Pellet (SWRL) e CBR};
+ \node[box,below=1.2cm of r] (l) {4a. Sinais nos dados; proposta em JSON (analista ou modelo)};
+ \node[gate,left=0.45cm of l] (c) {4b. Compilador OWL e portão da evolução};
+ \node[gate,left=0.45cm of c] (h) {5. Aprovação humana};
+ \node[box,left=0.45cm of h] (k) {Grafo atualizado: módulos de evolução e de dados};
+ \draw[arr] (s)--(i); \draw[arr] (i)--(g); \draw[arr] (g)--(r); \draw[arr] (r)--(l);
+ \draw[arr] (l)--(c); \draw[arr] (c)--(h); \draw[arr] (h)--(k);
+ \draw[arr,dashed] (k.north) -- node[left,font=\scriptsize]{dados e classes novos} (i.south);
+\end{tikzpicture}}
+\caption{Ciclo de vida em operação. Os nós mais escuros são verificações que podem recusar a mudança; nesse caso, nada é gravado.}
+\label{fig:ciclo}
+\end{figure}
+
+\textbf{Ingestão.} Há três caminhos. A carga em lote cruza o catálogo KEV da CISA \cite{cisakev}, o mapeamento KEV$\rightarrow$ATT\&CK do Center for Threat-Informed Defense \cite{ctidkev,strom2018attack} e a API do NVD \cite{nvd}, gerando para cada CVE um ramo completo (vulnerabilidade, fraqueza, padrão, ação, ativo, incidente e caso). A aquisição assistida preenche apenas lacunas das fontes, como a técnica ATT\&CK, que falta para 1.347 das 1.766 CVEs do KEV de 30/10/2026; cada valor proposto é conferido nos catálogos oficiais (CWE~5.0 e ATT\&CK~16.1), e um valor que não confere faz a CVE ser recusada. O enriquecimento em tempo real atende alertas do SOAR com uma CVE ausente da ontologia, consultando o NVD com cache de 24~h e o limite de pedidos da API. Em todos os caminhos o CVSS vem só do NVD, e cada campo registra a sua origem por anotação.
+
+\textbf{Portão.} Nenhum dado é gravado antes de o grafo composto (ontologia, extensão, evolução, dados existentes e novos) passar pela validação SHACL, com as restrições da ontologia e as de ingestão e evolução (CVE e atores duplicados, identificadores ATT\&CK mal formados, proveniência, rótulo e definição de classes novas, proibição de subclasses no núcleo), e pelo HermiT, que verifica a consistência e procura classes insatisfazíveis; o Pellet acrescenta a verificação com as regras.
+
+\textbf{Inferência.} Para que a Equação~(1) acompanhe uma hierarquia que pode ganhar níveis, o crédito parcial por categoria passou a ser a similaridade de Wu-Palmer \cite{wupalmer1994}, $wp(a,b) = 2\,p(\mathrm{lcs}(a,b))/(p(a)+p(b))$, calculada na árvore de cada faceta lida do próprio grafo, com $p$ a profundidade a partir da raiz. Na hierarquia de dois níveis da Seção~\ref{sec:res}, $wp$ vale 1 para a mesma categoria e 0 para categorias diferentes, de modo que a Equação~(1) não muda; a avaliação \emph{leave-one-out} foi repetida e coincidiu consulta a consulta. Em operação, cada alerta é inserido como incidente, raciocinado e comparado com os casos; a resposta traz a ação recomendada, o risco inferido e uma confiança que, abaixo de 0,5, pede aprovação humana. Na terminologia de Gruber, o serviço oferece ao SOAR uma interface \emph{tell-and-ask}: o alerta é uma pergunta, e a retenção de um caso aprovado, uma afirmação.
+
+\textbf{Evolução.} A estrutura muda a partir de sinais detectados de forma determinística, como uma categoria de fraqueza cujos membros se repartem por ramos distintos da hierarquia oficial da CWE ou uma categoria residual que acumula membros. Cada sinal pode ser entregue a um analista ou a um modelo de linguagem, que consulta a ontologia por funções somente de leitura e responde num esquema JSON validado localmente \cite{geminiapi}. Nenhum dos dois escreve OWL: um compilador determinístico traduz a proposta numa gramática restrita (classe sob uma superclasse existente, propriedade com domínio e contradomínio nomeados, classificação de indivíduos e classes definidas da forma $P \sqcap \exists r.C$) e rejeita o que viola regras estruturais. Trata-se do mesmo movimento do Ontolingua, invertido: em vez de traduzir uma linguagem expressiva para sistemas restritos, restringe-se de antemão o que um proponente não confiável pode dizer. O resultado passa pelo portão, pela classificação do HermiT, que recusa uma classe nova equivalente a uma existente, pelo Pellet e pelas oito CQs como regressão.
+
+\textbf{Governança.} Uma proposta aprovada é reaplicada sobre a base atual, com cópia de segurança, proveniência por axioma (proposta, autor, aprovador, data, justificativa e evidência) e versão incrementada (\texttt{evo-$N$}); se a verificação final falhar, as cópias são restauradas. A evolução é monótona, e o mesmo controle vale para a retenção de casos no ciclo do CBR.
+
+% =============================================================================
+\section{Avaliação e Resultados}
+\label{sec:res}
+
+Os resultados referem-se ao arquivo cujo SHA-256 começa por \texttt{\vSevenHash}, processado com Python \envPython{}, rdflib \envRdflib{} e Owlready2 \envOwlready{} (Pellet 2.3.1 e HermiT incluídos). Os números deste texto são gerados pelo mesmo programa que grava as evidências.
+
+\subsection{Consistência, questões de competência, regras e defeitos}
+
+O HermiT considerou a TBox \hermitOK{}, com \hermitUnsat{} classes insatisfazíveis (\hermitSec{}~s); o Pellet considerou a ontologia completa, com regras, \pelletOK{} (\pelletSec{}~s); e a validação SHACL foi \shaclOK{}. Esses resultados mostram que a ontologia tem um modelo e que os dados satisfazem as restrições, não que a modelagem é correta para o domínio; isso é o que os testes seguintes procuram verificar.
+
+As \cqTotal{} CQs foram executadas sobre o grafo inferido: \cqPassed{} de \cqTotal{} coincidiram com o esperado, e seis delas dependem de inferências. Cada regra foi testada com dados mínimos que devem e que não devem dispará-la, incluindo as fronteiras das faixas de CVSS (10,0; 9,0; 8,9; 7,0; 6,9; 4,0; 3,9; 0,1), atores diferentes da mesma categoria, simetria e ausência de autorrelação: passaram \rtPassed{} de \rtTotal{}. Para verificar se as verificações detectam erros, criaram-se \mutTotal{} versões da base com um defeito cada (indivíduo em classes disjuntas, dois CVSS para a mesma vulnerabilidade, CVSS como texto, incidente sem ator, caso sem solução, risco fora do vocabulário, CVSS acima de 10 e CVE mal formado). Os \mutDetected{} foram detectados: \mutOWL{} pelo Pellet e \mutSHACL{} pelo SHACL. O segundo CVSS foi detectado só pelo SHACL, embora a propriedade seja funcional. Isso responde à lacuna L1: o OntoCSD relata concordância de especialistas sobre o modelo, e aqui cada inferência é conferida contra um resultado esperado que poderia falhar.
+
+\subsection{Recuperação de casos}
+
+Cada um dos \looN{} incidentes foi usado como consulta contra os outros 23, e um caso é relevante quando a sua solução é igual à da consulta. Mediram-se a acurácia do primeiro colocado (Acc@1) e a precisão nos três primeiros (P@3), com desempate aleatório em esperança (Tabela~\ref{tab:loocv}).
+
+\begin{table}[ht]
+\centering\small
+\caption{Avaliação \emph{leave-one-out} da recuperação (24 consultas).}
+\label{tab:loocv}
+\begin{tabularx}{\textwidth}{@{}Xccc@{}}
+\toprule
+Estratégia & Acc@1 & P@3 & Cobertura\\
+\midrule
+Classe majoritária & \accMaj & \pthreeMaj & \covMaj\\
+Junção da versão 6: mesma categoria de ator ou mesma CWE & \accVsix & \pthreeVsix & \covVsix\\
+Mesmo ator concreto (R4), sem ordem & \accActor & \pthreeActor & \covActor\\
+Mesma CWE (R5 e R6), sem ordem & \accRule & \pthreeRule & \covRule\\
+Equação (1) com pesos iguais & \accEq & \pthreeEq & \covEq\\
+Equação (1) com os pesos definidos & \accVseven & \pthreeVseven & \covVseven\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A junção da versão~6 e o critério de ator ficaram abaixo da classe majoritária. As regras R5 e R6 acertam metade das vezes, mas não cobrem consultas cuja CWE não se repete (cobertura \covRule). A similaridade baseada na ontologia teve o melhor resultado também com pesos iguais (\accEq), o que indica que o ganho vem sobretudo da representação, e não do ajuste dos pesos; esse resultado toca a questão que Guerra et al. deixam em aberto sobre a ponderação dos atributos \cite{guerra2025cases}. A ablação levou a Acc@1 a \ablWeakness{} sem a fraqueza, \ablPattern{} sem o padrão, \ablAsset{} sem o ativo, \ablAttribute{} sem o atributo e \ablActor{} sem o ator: fraqueza e padrão carregam a maior parte da informação. Como as três exceções não são previsíveis a partir do problema, a acurácia máxima atingível é 21/24 (0,875).
+
+\subsection{Ciclo de vida}
+
+A Tabela~\ref{tab:ciclo} compara a base, a base de ingestão real (gerada do KEV, sem os 18 casos sintéticos e com o módulo de evolução em \lcEvoVersion{}) e o estado após um alerta com a \lcCve{}, ausente da ontologia. Nas três, o HermiT não encontrou inconsistências nem classes insatisfazíveis, e o SHACL não apontou violações; as CQs continuaram corretas com a extensão e a evolução carregadas (\lcRegressionCq{}).
+
+\begin{table}[ht]
+\centering\small
+\caption{Base, ingestão real e tempo real. Tempos de uma execução, com o arranque da máquina virtual Java.}
+\label{tab:ciclo}
+\input{tab_lifecycle}
+\end{table}
+
+Duas mudanças estruturais foram aplicadas pelo processo da Seção~\ref{sec:ciclo}: \texttt{evo-1} criou \oc{MemoryBufferBoundsWeakness} sob \oc{MemorySafetyWeakness}, com as CWE-787, CWE-125 e CWE-416, do ramo oficial CWE-119, deixando a CWE-843 (ramo CWE-704) na categoria-mãe; \texttt{evo-2} criou \oc{CommandInjectionWeakness} sob \oc{InjectionWeakness}, com as CWE-77 e CWE-78. A profundidade da hierarquia passou de \lcBaseDepth{} para \lcRealDepth{} níveis, e a Acc@1 na base de avaliação permaneceu \lcBaseAcc{}. As duas propostas partiram de sinais detectados nos dados, foram redigidas pelo autor e seguiram o mesmo caminho de compilação, portão e aprovação.
+
+No alerta com a \lcCve{}, a consulta ao NVD levou \lcNvdSec{}~s; o ramo criado (\lcEnrichTriples{} triplas, CVSS \lcCvss{}, \lcCwe{}) entrou diretamente na subcategoria criada pela \texttt{evo-2}, sem alteração de código, e foi validado e gravado em \lcEnrichSec{}~s. O Pellet inferiu risco \emph{\lcRisk} (R1a), e a recuperação recomendou \oc{\lcAction} com confiança \lcConfidence{}, abaixo de 0,5, o que fez a resposta pedir aprovação humana. O alerta completo levou \lcAlertOneSec{}~s, e um segundo alerta com a mesma CVE, \lcAlertTwoSec{}~s. Com o NVD inacessível, uma CVE inexistente ou um registro sem CVSS, o serviço não grava nada e pede revisão manual; esses casos foram verificados com testes que simulam a rede.
+
+% =============================================================================
+\section{Discussão}
+\label{sec:disc}
+
+\subsection{Portabilidade revisitada}
+\label{sec:portab}
+
+Os três limites que Gruber atribuiu à tradução de ontologias \cite{gruber1993} apareceram concretamente no desenvolvimento. \emph{A tradução é incompleta:} o HermiT não executa SWRL, e por isso a TBox é verificada com ele e as regras com o Pellet; o Owlready2 não lê Turtle, e a ontologia é traduzida para RDF/XML a cada execução; e uma propriedade de dados com contradomínio \texttt{xsd:date}, que não pertence ao mapa de tipos do OWL~2 \cite{owl2}, foi recusada pelo HermiT e passou a ser de anotação, por uma migração documentada. \emph{Restrições não traduzidas deixam de ser impostas:} o Pellet não acusou dois valores numa propriedade funcional, que só o SHACL detectou; numa versão da R3 que usava a classe definida \emph{CriticalRiskIncident} no corpo, o Pellet deixou de emitir parte dos riscos da R1; e o Owlready2 dividia literais com vírgulas ao ler os valores devolvidos pelo Pellet. \emph{A ferramenta não projeta a ontologia:} os defeitos da versão~6, como padrões de ataque ligados a ativos concretos, eram consistentes para todos os raciocinadores e só foram encontrados por revisão do modelo e por testes com resultado esperado.
+
+A resposta adotada segue a lição de Gruber de escrever no denominador comum dos sistemas-alvo e verificar o que cada um efetivamente impõe: OWL~2~DL e regras \emph{DL-safe}, dois raciocinadores com papéis distintos, SHACL para o mundo fechado e testes que podem falhar. Até a versão do Owlready2 faz parte do compromisso: a 0.51 traz um Pellet compilado para uma máquina virtual Java mais nova e falha na usada aqui, razão pela qual a versão 0.46 foi fixada.
+
+\subsection{Relação com os trabalhos de referência}
+
+O OntoCSD e a OntoCSIRT partilham a arquitetura em duas camadas, com regras antes dos casos. A OntoCSIRT acrescenta a ligação explícita entre as camadas (R6), a similaridade derivada das classes e a verificação de cada regra; o OntoCSD tem validação por especialistas e cenários de rede que faltam aqui. Guerra et al. e a OntoCSIRT são complementares: lá, a ontologia padroniza a \emph{solução} (ações e planos ordenados) e a avaliação usa 354 casos reais; aqui, a ontologia estrutura o \emph{problema} e é verificada por raciocinadores, mas as soluções são ações únicas e a base de avaliação é pequena. Uma integração natural seria ligar o \oc{ResolutionAction} da OntoCSIRT à hierarquia de ações de Guerra et al., de modo que a similaridade de problemas venha da OntoCSIRT e a de planos, da ontologia de ações.
+
+\subsection{Limitações}
+
+A base de avaliação é pequena e, em 18 dos 24 casos, sintética; a política de resposta foi definida pelo autor, e a avaliação mostra se a recuperação reconstrói uma política conhecida, não se as respostas são eficazes. A recuperação não foi medida na base de ingestão real, porque ali a solução de cada caso deriva da categoria da CWE, que também entra na similaridade, e a avaliação seria circular. O caminho do modelo de linguagem foi implementado e testado com respostas simuladas, mas não executado contra a API, e as duas mudanças estruturais foram aprovadas pelo próprio autor. O enriquecimento em tempo real foi medido com uma CVE, e os tempos, numa única execução. Não houve avaliação por especialistas, e o alinhamento ao STIX e ao D3FEND é por anotação, sem curadoria externa.
+
+% =============================================================================
+\section{Conclusão}
+\label{sec:conc}
+
+Este trabalho apresentou a OntoCSIRT, uma ontologia OWL~2~DL com oito regras SWRL e duas classes definidas para análise de incidentes e recuperação de casos de resposta, e analisou-a contra o estado da arte à luz da noção de Gruber de ontologia como especificação portável de compromissos. A análise identificou quatro lacunas nos sistemas mais próximos: verificabilidade das inferências, conceitualização guardada fora da ontologia, base estática ou atualizada sem garantias, e baixa reprodutibilidade. A OntoCSIRT responde a elas com um protocolo de avaliação reprodutível (8/8 CQs, 20/20 testes de regras, 10/10 defeitos detectados), com uma similaridade derivada da ontologia que atingiu \accVseven{} de Acc@1 contra \accMaj{} da classe majoritária e com um ciclo de vida em que dados reais e mudanças estruturais só entram depois de verificados e aprovados.
+
+Como trabalhos futuros, propõe-se: (i) avaliar a ontologia e as recomendações com especialistas de CSIRT, como no OntoCSD; (ii) avaliar a recuperação numa base real de casos com soluções registradas por analistas, independentes da categoria da CWE; (iii) integrar a hierarquia de ações e os planos ordenados de Guerra et al.; (iv) medir a qualidade das propostas estruturais feitas por modelos de linguagem contra a API real, com aprovação por terceiros; e (v) avaliar a ontologia com o OOPS! \cite{poveda2014oops} e publicá-la segundo os princípios FAIR \cite{oliveira2021fair}.
+
+% =============================================================================
+\section*{Declarações}
+
+\textbf{Disponibilidade de dados e código.} A ontologia, as restrições SHACL, os programas de processamento, ingestão e evolução, o serviço para SOAR e os arquivos de evidência que geram todos os números deste artigo serão disponibilizados em repositório público [URL a inserir após a revisão]. Os dados de vulnerabilidades vêm da API do NVD, mas este trabalho não é endossado nem certificado pelo NVD. Atores, ativos e 18 dos 24 casos da base de avaliação são fictícios.
+
+\textbf{Ética.} O trabalho não envolveu seres humanos nem dados pessoais; todas as fontes externas são públicas.
+
+\textbf{Uso de ferramentas de IA.} Um assistente baseado em modelo de linguagem (Claude, da Anthropic) foi usado no desenvolvimento do código de ingestão, validação, evolução e do serviço para SOAR, na redação das propostas \texttt{evo-1} e \texttt{evo-2} e na redação e revisão deste manuscrito. O autor reviu e aprovou todo o conteúdo. A integração com a API Gemini descrita na Seção~\ref{sec:ciclo} faz parte do sistema e não foi usada para produzir resultados deste artigo. Todos os números citados foram gerados pelos programas que acompanham o trabalho.
+
+\textbf{Contribuição do autor (CRediT).} Stefano Camargo: conceitualização, metodologia, software, validação, análise formal, curadoria de dados, redação do original e revisão.
+
+\textbf{Conflito de interesses e financiamento.} O autor declara não haver conflito de interesses. Este trabalho não recebeu financiamento específico.
+
+\bibliographystyle{sbc}
+\bibliography{refs_v7}
+
+\end{document}

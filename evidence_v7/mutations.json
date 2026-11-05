@@ -1,0 +1,112 @@
+{
+  "detected": 10,
+  "total": 10,
+  "by_owl": 4,
+  "by_shacl": 7,
+  "mutants": [
+    {
+      "id": "M1",
+      "defect": "Vulnerabilidade tipada tambem como padrao de ataque (disjuncao)",
+      "expected_detector": "owl",
+      "pellet_inconsistent": true,
+      "shacl_violation": false,
+      "shacl_messages": [],
+      "detected": true
+    },
+    {
+      "id": "M2",
+      "defect": "Ator externo e interno ao mesmo tempo (disjuncao VERIS)",
+      "expected_detector": "owl",
+      "pellet_inconsistent": true,
+      "shacl_violation": false,
+      "shacl_messages": [],
+      "detected": true
+    },
+    {
+      "id": "M3",
+      "defect": "Ativo servidor e base de dados ao mesmo tempo",
+      "expected_detector": "owl",
+      "pellet_inconsistent": true,
+      "shacl_violation": false,
+      "shacl_messages": [],
+      "detected": true
+    },
+    {
+      "id": "M4",
+      "defect": "Segundo CVSS para a mesma vulnerabilidade (propriedade funcional)",
+      "expected_detector": "owl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "CVSS ausente, repetido, nao decimal ou fora de [0,10]."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M5",
+      "defect": "CVSS como texto em vez de decimal",
+      "expected_detector": "any",
+      "pellet_inconsistent": true,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "CVSS ausente, repetido, nao decimal ou fora de [0,10]."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M6",
+      "defect": "Incidente sem ator (VERIS A4 incompleto)",
+      "expected_detector": "shacl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "Incidente sem ator (VERIS A4)."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M7",
+      "defect": "Caso sem solucao registada",
+      "expected_detector": "shacl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "Caso sem solucao registada."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M8",
+      "defect": "Nivel de risco fora do vocabulario",
+      "expected_detector": "shacl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "Nivel de risco fora do vocabulario controlado ou ambiguo."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M9",
+      "defect": "CVSS fora do intervalo [0,10]",
+      "expected_detector": "shacl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "CVSS ausente, repetido, nao decimal ou fora de [0,10]."
+      ],
+      "detected": true
+    },
+    {
+      "id": "M10",
+      "defect": "Identificador CVE mal formado",
+      "expected_detector": "shacl",
+      "pellet_inconsistent": false,
+      "shacl_violation": true,
+      "shacl_messages": [
+        "CVE mal formado."
+      ],
+      "detected": true
+    }
+  ]
+}

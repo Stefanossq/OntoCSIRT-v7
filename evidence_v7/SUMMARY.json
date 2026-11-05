@@ -1,0 +1,56 @@
+{
+  "env": {
+    "python": "3.13.2",
+    "rdflib": "7.6.0",
+    "owlready2": "0.46",
+    "java": "openjdk version \"17.0.13\" 2024-10-15",
+    "ttl": "OntoCSIRT_v7.ttl",
+    "ttl_sha256": "8c2fc5f00faee4bf5a4b8e38a96d8ed2b92da8f28c825f49eda68a80b1720e69"
+  },
+  "consistency": {
+    "hermit_consistent": true,
+    "pellet_consistent": true,
+    "shacl_conforms": true
+  },
+  "cq": "8/8",
+  "ruletests": "20/20",
+  "mutations": "10/10",
+  "loocv": {
+    "majority": {
+      "description": "classe majoritaria (sempre a solucao mais frequente)",
+      "acc1": 0.292,
+      "p3": 0.292,
+      "coverage": 1.0
+    },
+    "v6_join": {
+      "description": "juncao do v6: mesma categoria de ator OU mesma CWE, sem ranking",
+      "acc1": 0.25,
+      "p3": 0.243,
+      "coverage": 1.0
+    },
+    "actor": {
+      "description": "so mesmo ator concreto (R4), sem ranking",
+      "acc1": 0.244,
+      "p3": 0.231,
+      "coverage": 1.0
+    },
+    "rule_R6": {
+      "description": "so mesma CWE via regra R5/R6, sem ranking",
+      "acc1": 0.5,
+      "p3": 0.222,
+      "coverage": 0.792
+    },
+    "v7_eq": {
+      "description": "similaridade v7 com pesos iguais",
+      "acc1": 0.625,
+      "p3": 0.451,
+      "coverage": 1.0
+    },
+    "v7": {
+      "description": "similaridade v7 com pesos definidos a priori",
+      "acc1": 0.688,
+      "p3": 0.486,
+      "coverage": 1.0
+    }
+  }
+}

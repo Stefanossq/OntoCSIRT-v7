@@ -1,0 +1,21 @@
+{
+ "kind": "new_class",
+ "signal_id": "heterogeneous:InjectionWeakness",
+ "class_name": "CommandInjectionWeakness",
+ "parent": "InjectionWeakness",
+ "label_pt": "Injecao de comandos",
+ "label_en": "Command injection",
+ "definition": "Fraqueza de injecao em que elementos especiais nao neutralizados alteram um comando executado pelo sistema ou por um interpretador de comandos (ramo oficial CWE-77 da vista de pesquisa 1000).",
+ "disjoint_with_siblings": false,
+ "members": [
+  {"individual": "CWE_77", "justification": "CWE-77 e a raiz do ramo"},
+  {"individual": "CWE_78", "justification": "CWE-78 OS Command Injection: ChildOf CWE-77"}
+ ],
+ "rationale": "Em InjectionWeakness, CWE-77 e CWE-78 formam o sub-ramo oficial de injecao de comandos (CWE-77), distinto da injecao de SQL (CWE-89) e da injecao generica (CWE-74). Os casos do artigo com este padrao (AP_CommandInjection) seguem a mesma politica da categoria-mae, que e herdada.",
+ "evidence": [
+  {"source": "cwe", "ref": "CWE-77", "note": "Improper Neutralization of Special Elements used in a Command (CWE 5.0)"},
+  {"source": "ontology", "ref": "AP_CommandInjection", "note": "relatedWeakness CWE_77, CWE_78"},
+  {"source": "signal", "ref": "heterogeneous:InjectionWeakness", "note": "2 de 4 CWEs sob CWE-77"}
+ ],
+ "confidence": 0.75
+}

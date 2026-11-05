@@ -1,0 +1,213 @@
+{
+ "id": "EVO-20261103-002",
+ "created": "2026-11-03T03:12:04",
+ "proposed_by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+ "signal": "heterogeneous:InjectionWeakness",
+ "llm": null,
+ "proposal": {
+  "kind": "new_class",
+  "signal_id": "heterogeneous:InjectionWeakness",
+  "rationale": "Em InjectionWeakness, CWE-77 e CWE-78 formam o sub-ramo oficial de injecao de comandos (CWE-77), distinto da injecao de SQL (CWE-89) e da injecao generica (CWE-74). Os casos do artigo com este padrao (AP_CommandInjection) seguem a mesma politica da categoria-mae, que e herdada.",
+  "evidence": [
+   {
+    "source": "cwe",
+    "ref": "CWE-77",
+    "note": "Improper Neutralization of Special Elements used in a Command (CWE 5.0)"
+   },
+   {
+    "source": "ontology",
+    "ref": "AP_CommandInjection",
+    "note": "relatedWeakness CWE_77, CWE_78"
+   },
+   {
+    "source": "signal",
+    "ref": "heterogeneous:InjectionWeakness",
+    "note": "2 de 4 CWEs sob CWE-77"
+   }
+  ],
+  "confidence": 0.75,
+  "class_name": "CommandInjectionWeakness",
+  "parent": "InjectionWeakness",
+  "label_pt": "Injecao de comandos",
+  "label_en": "Command injection",
+  "definition": "Fraqueza de injecao em que elementos especiais nao neutralizados alteram um comando executado pelo sistema ou por um interpretador de comandos (ramo oficial CWE-77 da vista de pesquisa 1000).",
+  "disjoint_with_siblings": false,
+  "defined_by": null,
+  "members": [
+   {
+    "individual": "CWE_77",
+    "justification": "CWE-77 e a raiz do ramo"
+   },
+   {
+    "individual": "CWE_78",
+    "justification": "CWE-78 OS Command Injection: ChildOf CWE-77"
+   }
+  ],
+  "policy_response": null,
+  "property_name": null,
+  "domain": null,
+  "range": null,
+  "inverse_name": null,
+  "characteristics": null,
+  "assertions": null
+ },
+ "compiled": {
+  "proposal_id": "EVO-20261103-002",
+  "kind": "new_class",
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "new_classes": [
+   "CommandInjectionWeakness"
+  ],
+  "new_properties": [],
+  "members": [
+   "CWE_77",
+   "CWE_78"
+  ],
+  "triples_added": 16,
+  "retractions": []
+ },
+ "turtle": "@prefix : <http://www.semanticweb.org/ontocsirt#> .\n@prefix evo: <http://www.semanticweb.org/ontocsirt/evo#> .\n@prefix owl: <http://www.w3.org/2002/07/owl#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\n:CWE_77 a :CommandInjectionWeakness ;\n    evo:classifiedBy \"EVO-20261103-002\" .\n\n:CWE_78 a :CommandInjectionWeakness ;\n    evo:classifiedBy \"EVO-20261103-002\" .\n\n:CommandInjectionWeakness a owl:Class ;\n    rdfs:label \"Command injection\"@en,\n        \"Injecao de comandos\"@pt ;\n    evo:evidence \"cwe:CWE-77 - Improper Neutralization of Special Elements used in a Command (CWE 5.0)\",\n        \"ontology:AP_CommandInjection - relatedWeakness CWE_77, CWE_78\",\n        \"signal:heterogeneous:InjectionWeakness - 2 de 4 CWEs sob CWE-77\" ;\n    evo:proposalId \"EVO-20261103-002\" ;\n    evo:proposedBy \"analista (rascunho redigido pelo Claude Code; aguarda revisao)\" ;\n    evo:rationale \"Em InjectionWeakness, CWE-77 e CWE-78 formam o sub-ramo oficial de injecao de comandos (CWE-77), distinto da injecao de SQL (CWE-89) e da injecao generica (CWE-74). Os casos do artigo com este padrao (AP_CommandInjection) seguem a mesma politica da categoria-mae, que e herdada.\" ;\n    evo:signal \"heterogeneous:InjectionWeakness\" ;\n    rdfs:comment \"Fraqueza de injecao em que elementos especiais nao neutralizados alteram um comando executado pelo sistema ou por um interpretador de comandos (ramo oficial CWE-77 da vista de pesquisa 1000).\"@pt ;\n    rdfs:subClassOf :InjectionWeakness .\n\n",
+ "gate": {
+  "passed": true,
+  "checks": [
+   {
+    "name": "compilacao",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "sintaxe Turtle",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "SHACL (v7 + ingestao + evo)",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: consistencia",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: classes insatisfaziveis",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "Pellet + SWRL: consistencia",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: sem redundancia (equivalencia inferida)",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "regressao: questoes de competencia do artigo",
+    "ok": true,
+    "blocking": true,
+    "detail": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   {
+    "name": "LOOCV Acc@1 na base do artigo (informativo)",
+    "ok": true,
+    "blocking": false,
+    "detail": {
+     "base_acc1_before": 0.688,
+     "base_acc1_after": 0.688
+    }
+   }
+  ],
+  "seconds": 10.39,
+  "classification": {
+   "consistent": true,
+   "classes": {
+    "CommandInjectionWeakness": {
+     "equivalent_named": [],
+     "inferred_parents": [
+      "InjectionWeakness"
+     ],
+     "inferred_members": [
+      "CWE_77",
+      "CWE_78"
+     ]
+    }
+   },
+   "seconds": 1.18
+  },
+  "loocv": {
+   "base_acc1_before": 0.688,
+   "base_acc1_after": 0.688
+  },
+  "hermit": {
+   "seconds": 1.05
+  },
+  "pellet": {
+   "seconds": 1.7
+  }
+ },
+ "status": "applied",
+ "history": [
+  {
+   "at": "2026-11-03T03:12:14",
+   "action": "created",
+   "by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+   "note": "pending"
+  },
+  {
+   "at": "2026-11-03T23:59:38",
+   "action": "approved",
+   "by": "Stefano Camargo",
+   "note": "aprovado no chat: 'Approve both'"
+  },
+  {
+   "at": "2026-11-03T23:59:58",
+   "action": "applied",
+   "by": "Stefano Camargo",
+   "note": "evo-2"
+  }
+ ],
+ "approved_by": "Stefano Camargo",
+ "approved_on": "2026-11-03",
+ "applied_on": "2026-11-03T23:59:58",
+ "applied": {
+  "evo_version": "evo-2",
+  "triples_added": 18,
+  "retractions": {},
+  "backups": {
+   "OntoCSIRT_v7_evo.ttl": "evolution/backups/OntoCSIRT_v7_evo.ttl.20261103-235951.EVO-20261103-002"
+  },
+  "verification": {
+   "ok": true,
+   "shacl_conforms": true,
+   "violations": [],
+   "hermit": {
+    "consistent": true,
+    "seconds": 1.11,
+    "unsatisfiable_classes": []
+   },
+   "pellet": {
+    "consistent": true,
+    "seconds": 1.86,
+    "inferred_triples": 1782
+   },
+   "competency": "8/8"
+  }
+ }
+}

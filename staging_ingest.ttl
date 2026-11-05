@@ -1,0 +1,1092 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix swrl: <http://www.w3.org/2003/11/swrl#> .
+@prefix swrlb: <http://www.w3.org/2003/11/swrlb#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+dcterms:created a owl:AnnotationProperty .
+
+dcterms:creator a owl:AnnotationProperty .
+
+dcterms:license a owl:AnnotationProperty .
+
+dcterms:source a owl:AnnotationProperty .
+
+<http://www.semanticweb.org/ontocsirt> a owl:Ontology ;
+    rdfs:label "OntoCSIRT v7" ;
+    dcterms:created "2026-11-02"^^xsd:date ;
+    dcterms:creator "Nome do Aluno" ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "Ontologia OWL 2 DL para analise de incidentes de ciberseguranca e recuperacao de casos de resposta: incidente reificado (VERIS A4), vulnerabilidades e fraquezas (CVE/CWE), casos de resolucao e regras SWRL." ;
+    owl:priorVersion <http://www.semanticweb.org/ontocsirt/6.0> ;
+    owl:versionIRI <http://www.semanticweb.org/ontocsirt/7.0> ;
+    owl:versionInfo "7.0" .
+
+:AP_AuthzBypass a :AttackPattern ;
+    rdfs:label "Contorno de autorizacao" ;
+    :relatedWeakness :CWE_862 .
+
+:AP_CSRF a :AttackPattern ;
+    rdfs:label "Falsificacao de requisicao entre sitios" ;
+    :relatedWeakness :CWE_352 .
+
+:AP_CredentialAbuse a :AttackPattern ;
+    rdfs:label "Abuso de credenciais" ;
+    :relatedWeakness :CWE_287,
+        :CWE_798 .
+
+:AP_MaliciousUpload a :AttackPattern ;
+    rdfs:label "Envio de arquivo malicioso" ;
+    :relatedWeakness :CWE_434 .
+
+:AP_PathTraversal a :AttackPattern ;
+    rdfs:label "Travessia de diretorio" ;
+    :relatedWeakness :CWE_22 .
+
+:Actor_INS_C a :InternalActor ;
+    rdfs:label "Funcionario C (interno, ficticio)" .
+
+:Actor_PAR_D a :PartnerActor ;
+    rdfs:label "Fornecedor D (parceiro, ficticio)" .
+
+:Asset_Database_2 a :Database ;
+    rdfs:label "Base de dados 2" .
+
+:Asset_Server_2 a :Server ;
+    rdfs:label "Servidor 2" .
+
+:Asset_Workstation_2 a :Workstation ;
+    rdfs:label "Estacao 2" .
+
+:Case_01 a :Case ;
+    :hasProblem :Incident_01 ;
+    :hasSolution :CoA_Patch .
+
+:Case_02 a :Case ;
+    :hasProblem :Incident_02 ;
+    :hasSolution :CoA_Patch .
+
+:Case_03 a :Case ;
+    :hasProblem :Incident_03 ;
+    :hasSolution :CoA_WAFRule .
+
+:Case_04 a :Case ;
+    :hasProblem :Incident_04 ;
+    :hasSolution :CoA_Isolate .
+
+:Case_05 a :Case ;
+    :hasProblem :Incident_05 ;
+    :hasSolution :CoA_WAFRule .
+
+:Case_06 a :Case ;
+    :hasProblem :Incident_06 ;
+    :hasSolution :CoA_Segment .
+
+:Case_CVE_2025_20337 a :Case ;
+    :hasProblem :Incident_CVE_2025_20337 ;
+    :hasSolution :CoA_Isolate ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_21480 a :Case ;
+    :hasProblem :Incident_CVE_2025_21480 ;
+    :hasSolution :CoA_AccessControlFix ;
+    :kevRequiredAction "Apply mitigations per vendor instructions; follow applicable BOD 22-01 guidance for cloud services; or discontinue use of the product if mitigations are unavailable." ;
+    :kevSolution :CoA_ApplyMitigation ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:Case_CVE_2025_49706 a :Case ;
+    :hasProblem :Incident_CVE_2025_49706 ;
+    :hasSolution :CoA_RotateCredentials ;
+    :kevRequiredAction "Disconnect public-facing versions of SharePoint Server that have reached their end-of-life (EOL) or end-of-service (EOS) to include SharePoint Server 2013 and earlier versions. For supported versions; please follow the mitigations according to CISA (URL listed below in Notes) and vendor instructions (URL listed below in Notes). Adhere to the applicable BOD 22-01 guidance for cloud services or discontinue use of the product if mitigations are not available." ;
+    :kevSolution :CoA_Decommission ;
+    :solutionProvenance "policy:cwe-category-v1" .
+
+:ConfidentialityAtRisk a owl:Class ;
+    rdfs:label "Incidente com risco a confidencialidade"@pt ;
+    rdfs:comment "Definida em OWL: incidente cujo atributo afetado inclui a confidencialidade." ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( :Incident [ a owl:Restriction ;
+                        owl:hasValue :State_Confidentiality ;
+                        owl:onProperty :hasAttribute ] ) ] .
+
+:CriticalRiskIncident a owl:Class ;
+    rdfs:label "Incidente de risco critico"@pt ;
+    rdfs:comment "Definida em OWL sobre o valor de risco produzido pela regra R1a." ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( :Incident [ a owl:Restriction ;
+                        owl:hasValue "Critical" ;
+                        owl:onProperty :hasRiskLevel ] ) ] .
+
+:R1a_Critical a swrl:Imp ;
+    rdfs:label "R1a - CVSS >= 9.0 implica risco Critical" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :v ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v ;
+                swrl:argument2 :s ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 9.0 ) ;
+                swrl:builtin swrlb:greaterThanOrEqual ] ) ;
+    swrl:head ( [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 "Critical" ;
+                swrl:propertyPredicate :hasRiskLevel ] ) .
+
+:R1b_High a swrl:Imp ;
+    rdfs:label "R1b - 7.0 <= CVSS < 9.0 implica risco High" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :v ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v ;
+                swrl:argument2 :s ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 7.0 ) ;
+                swrl:builtin swrlb:greaterThanOrEqual ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 9.0 ) ;
+                swrl:builtin swrlb:lessThan ] ) ;
+    swrl:head ( [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 "High" ;
+                swrl:propertyPredicate :hasRiskLevel ] ) .
+
+:R1c_Medium a swrl:Imp ;
+    rdfs:label "R1c - 4.0 <= CVSS < 7.0 implica risco Medium" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :v ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v ;
+                swrl:argument2 :s ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 4.0 ) ;
+                swrl:builtin swrlb:greaterThanOrEqual ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 7.0 ) ;
+                swrl:builtin swrlb:lessThan ] ) ;
+    swrl:head ( [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 "Medium" ;
+                swrl:propertyPredicate :hasRiskLevel ] ) .
+
+:R1d_Low a swrl:Imp ;
+    rdfs:label "R1d - CVSS < 4.0 implica risco Low" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :v ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v ;
+                swrl:argument2 :s ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s 4.0 ) ;
+                swrl:builtin swrlb:lessThan ] ) ;
+    swrl:head ( [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 "Low" ;
+                swrl:propertyPredicate :hasRiskLevel ] ) .
+
+:R3_RecurrentCritical a swrl:Imp ;
+    rdfs:label "R3 - ativo com dois ou mais incidentes criticos distintos" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :a ;
+                swrl:classPredicate :Asset ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :a ;
+                swrl:propertyPredicate :hasAsset ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :v1 ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v1 ;
+                swrl:argument2 :s1 ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s1 9.0 ) ;
+                swrl:builtin swrlb:greaterThanOrEqual ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i2 ;
+                swrl:argument2 :a ;
+                swrl:propertyPredicate :hasAsset ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i2 ;
+                swrl:argument2 :v2 ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:DatavaluedPropertyAtom ;
+                swrl:argument1 :v2 ;
+                swrl:argument2 :s2 ;
+                swrl:propertyPredicate :cvssBaseScore ] [ a swrl:BuiltinAtom ;
+                swrl:arguments ( :s2 9.0 ) ;
+                swrl:builtin swrlb:greaterThanOrEqual ] [ a swrl:DifferentIndividualsAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :i2 ] ) ;
+    swrl:head ( [ a swrl:ClassAtom ;
+                swrl:argument1 :a ;
+                swrl:classPredicate :RecurrentlyCriticalAsset ] ) .
+
+:R4_SharedActor a swrl:Imp ;
+    rdfs:label "R4 - incidentes com o mesmo ator concreto" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i1 ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :actor ;
+                swrl:propertyPredicate :hasActor ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i2 ;
+                swrl:argument2 :actor ;
+                swrl:propertyPredicate :hasActor ] [ a swrl:DifferentIndividualsAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :i2 ] ) ;
+    swrl:head ( [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :i2 ;
+                swrl:propertyPredicate :sharesActorWith ] ) .
+
+:R5_SharedWeakness a swrl:Imp ;
+    rdfs:label "R5 - incidentes com a mesma fraqueza (CWE)" ;
+    swrl:body ( [ a swrl:ClassAtom ;
+                swrl:argument1 :i1 ;
+                swrl:classPredicate :Incident ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :v1 ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :v1 ;
+                swrl:argument2 :w ;
+                swrl:propertyPredicate :hasWeakness ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i2 ;
+                swrl:argument2 :v2 ;
+                swrl:propertyPredicate :involvesVulnerability ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :v2 ;
+                swrl:argument2 :w ;
+                swrl:propertyPredicate :hasWeakness ] [ a swrl:DifferentIndividualsAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :i2 ] ) ;
+    swrl:head ( [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i1 ;
+                swrl:argument2 :i2 ;
+                swrl:propertyPredicate :sharesWeaknessWith ] ) .
+
+:R6_CandidateSolution a swrl:Imp ;
+    rdfs:label "R6 - solucao de caso com a mesma fraqueza e candidata" ;
+    swrl:body ( [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :j ;
+                swrl:propertyPredicate :sharesWeaknessWith ] [ a swrl:ClassAtom ;
+                swrl:argument1 :c ;
+                swrl:classPredicate :Case ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :c ;
+                swrl:argument2 :j ;
+                swrl:propertyPredicate :hasProblem ] [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :c ;
+                swrl:argument2 :sol ;
+                swrl:propertyPredicate :hasSolution ] ) ;
+    swrl:head ( [ a swrl:IndividualPropertyAtom ;
+                swrl:argument1 :i ;
+                swrl:argument2 :sol ;
+                swrl:propertyPredicate :candidateSolution ] ) .
+
+:State_Availability a :SecurityState ;
+    rdfs:label "Disponibilidade"@pt .
+
+:alertId a owl:DatatypeProperty ;
+    rdfs:label "identificador do alerta"@pt ;
+    rdfs:domain :Incident ;
+    rdfs:range xsd:string .
+
+:assetTypeEvidence a owl:AnnotationProperty ;
+    rdfs:label "evidencia do tipo de ativo"@pt .
+
+:attackId a owl:DatatypeProperty ;
+    rdfs:label "identificador ATT&CK"@pt ;
+    rdfs:domain :AttackPattern ;
+    rdfs:range xsd:string .
+
+:confidentialityImpact a owl:DatatypeProperty ;
+    rdfs:label "impacto em confidencialidade"@pt ;
+    rdfs:comment "Metrica C do vetor CVSS: HIGH, LOW ou NONE." ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range xsd:string .
+
+:cveId a owl:DatatypeProperty ;
+    rdfs:label "identificador CVE"@pt ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range xsd:string .
+
+:cvssSource a owl:DatatypeProperty ;
+    rdfs:label "origem do CVSS"@pt ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range xsd:string .
+
+:cweId a owl:DatatypeProperty ;
+    rdfs:label "identificador CWE"@pt ;
+    rdfs:domain :Weakness ;
+    rdfs:range xsd:string .
+
+:detectedBy a owl:ObjectProperty ;
+    rdfs:label "detectado por"@pt ;
+    rdfs:domain :Incident ;
+    rdfs:range :DetectionSource .
+
+:exploits a owl:ObjectProperty ;
+    rdfs:label "explora"@pt ;
+    rdfs:comment "A acao concreta explora a vulnerabilidade concreta." ;
+    rdfs:domain :ThreatAction ;
+    rdfs:range :Vulnerability .
+
+:hasAction a owl:ObjectProperty ;
+    rdfs:label "tem acao"@pt ;
+    rdfs:comment "VERIS: o que foi feito (acao concreta)." ;
+    rdfs:domain :Incident ;
+    rdfs:range :ThreatAction .
+
+:instantiatesPattern a owl:ObjectProperty ;
+    rdfs:label "instancia padrao"@pt ;
+    rdfs:comment "Liga a acao concreta ao tipo abstrato." ;
+    rdfs:domain :ThreatAction ;
+    rdfs:range :AttackPattern .
+
+:kevDateAdded a owl:AnnotationProperty ;
+    rdfs:label "data de inclusao no KEV"@pt .
+
+:kevRequiredAction a owl:DatatypeProperty ;
+    rdfs:label "acao exigida pelo KEV (texto)"@pt ;
+    rdfs:domain :Case ;
+    rdfs:range xsd:string .
+
+:kevSolution a owl:ObjectProperty ;
+    rdfs:label "acao normalizada do KEV"@pt ;
+    rdfs:comment "Normalizacao do requiredAction do KEV; guardada a parte para comparacao com a sugestao da politica." ;
+    rdfs:domain :Case ;
+    rdfs:range :ResolutionAction .
+
+:knownRansomwareUse a owl:DatatypeProperty ;
+    rdfs:label "uso conhecido em ransomware (KEV)"@pt ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range xsd:string .
+
+:mappedTechnique a owl:ObjectProperty ;
+    rdfs:label "tecnica mapeada (adicional)"@pt ;
+    rdfs:comment "Outras tecnicas de exploracao do mapeamento CTID KEV->ATT&CK, alem da usada na acao." ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range :AttackPattern .
+
+:mitigatedBy a owl:ObjectProperty ;
+    rdfs:label "mitigado por"@pt ;
+    rdfs:comment "Acao efetivamente registada para o incidente historico." ;
+    rdfs:domain :Incident ;
+    rdfs:range :ResolutionAction .
+
+:otherCweIds a owl:AnnotationProperty ;
+    rdfs:label "outros CWE listados (separados por espaco)"@pt .
+
+:relatedWeakness a owl:ObjectProperty ;
+    rdfs:label "fraqueza relacionada"@pt ;
+    rdfs:comment "Fraqueza tipicamente explorada pelo padrao." ;
+    rdfs:domain :AttackPattern ;
+    rdfs:range :Weakness .
+
+:solutionProvenance a owl:DatatypeProperty ;
+    rdfs:label "proveniencia da solucao"@pt ;
+    rdfs:comment "De onde vem hasSolution: 'policy:cwe-category-v1' (sugestao derivada da politica) ou 'kev:requiredAction' (normalizacao do texto do KEV). Nunca e um desfecho observado." ;
+    rdfs:domain :Case ;
+    rdfs:range xsd:string .
+
+:sourceAddress a owl:DatatypeProperty ;
+    rdfs:label "endereco de origem"@pt ;
+    rdfs:domain :ThreatActor ;
+    rdfs:range xsd:string .
+
+:stixType a owl:AnnotationProperty ;
+    rdfs:comment "Tipo de objeto STIX 2.1 mais proximo (correspondencia aproximada, nao equivalencia)." .
+
+:vendorProduct a owl:DatatypeProperty ;
+    rdfs:label "fornecedor e produto (KEV)"@pt ;
+    rdfs:domain :Asset ;
+    rdfs:range xsd:string .
+
+:verificationNote a owl:AnnotationProperty ;
+    rdfs:comment "Origem e estado de verificacao do dado (aterramento/grounding)." .
+
+:verisCategory a owl:AnnotationProperty ;
+    rdfs:comment "Elemento do modelo VERIS A4 ou categoria VERIS correspondente." .
+
+<http://www.semanticweb.org/ontocsirt/ext> a owl:Ontology ;
+    rdfs:label "OntoCSIRT v7 - extensao de ingestao (KEV, ATT&CK, NVD) e SOAR" ;
+    rdfs:comment "Acrescenta vocabulario de proveniencia; os dados ingeridos nao sao desfechos de incidentes." .
+
+:AP_CommandInjection a :AttackPattern ;
+    rdfs:label "Injecao de comandos" ;
+    :relatedWeakness :CWE_77,
+        :CWE_78 .
+
+:AP_Deserialization a :AttackPattern ;
+    rdfs:label "Desserializacao insegura" ;
+    :relatedWeakness :CWE_502 .
+
+:AP_IDOR a :AttackPattern ;
+    rdfs:label "Referencia direta insegura a objeto" ;
+    :relatedWeakness :CWE_639 .
+
+:AP_SQLInjection a :AttackPattern ;
+    rdfs:label "Injecao de SQL" ;
+    :relatedWeakness :CWE_89 .
+
+:AP_SSRF a :AttackPattern ;
+    rdfs:label "Falsificacao de requisicao no servidor" ;
+    :relatedWeakness :CWE_918 .
+
+:AP_T1055 a :AttackPattern ;
+    rdfs:label "T1055 Process Injection (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1055> ;
+    :attackId "T1055" .
+
+:AP_T1106 a :AttackPattern ;
+    rdfs:label "T1106 Native API (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1106> ;
+    :attackId "T1106" .
+
+:AP_T1190 a :AttackPattern ;
+    rdfs:label "T1190 Exploit Public-Facing Application (MITRE ATT&CK)" ;
+    dcterms:source <https://attack.mitre.org/techniques/T1190> ;
+    :attackId "T1190" .
+
+:AP_XSS a :AttackPattern ;
+    rdfs:label "Cross-site scripting" ;
+    :relatedWeakness :CWE_79 .
+
+:Act_01 a :ThreatAction ;
+    :exploits :Vuln_CVE_2021_4045 ;
+    :instantiatesPattern :AP_CommandInjection .
+
+:Act_02 a :ThreatAction ;
+    :exploits :Vuln_CVE_2015_4852 ;
+    :instantiatesPattern :AP_Deserialization .
+
+:Act_03 a :ThreatAction ;
+    :exploits :Vuln_CVE_2023_2065 ;
+    :instantiatesPattern :AP_IDOR .
+
+:Act_04 a :ThreatAction ;
+    :exploits :Vuln_CVE_2023_34362 ;
+    :instantiatesPattern :AP_SQLInjection .
+
+:Act_05 a :ThreatAction ;
+    :exploits :Vuln_CVE_2020_11022 ;
+    :instantiatesPattern :AP_XSS .
+
+:Act_06 a :ThreatAction ;
+    :exploits :Vuln_CVE_2021_26855 ;
+    :instantiatesPattern :AP_SSRF .
+
+:Act_CVE_2025_20337 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_20337 ;
+    :instantiatesPattern :AP_T1106 .
+
+:Act_CVE_2025_21480 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_21480 ;
+    :instantiatesPattern :AP_T1055 .
+
+:Act_CVE_2025_49706 a :ThreatAction ;
+    :exploits :Vuln_CVE_2025_49706 ;
+    :instantiatesPattern :AP_T1190 .
+
+:Actor_UNK_E a :ExternalActor ;
+    rdfs:label "Ator externo nao atribuido E (ficticio)" .
+
+:Actor_Unknown_CVE_2025_20337 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-20337)" .
+
+:Actor_Unknown_CVE_2025_21480 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-21480)" .
+
+:Actor_Unknown_CVE_2025_49706 a :UnknownActor ;
+    rdfs:label "Ator desconhecido (KEV CVE-2025-49706)" .
+
+:Asset_Cisco_Identity_Services_Engine a :Server ;
+    rdfs:label "Cisco Identity Services Engine" ;
+    :assetTypeEvidence "heuristica: sem regra -> Server (padrao)" ;
+    :vendorProduct "Cisco Identity Services Engine" .
+
+:Asset_Database_1 a :Database ;
+    rdfs:label "Base de dados 1" .
+
+:Asset_Gateway_1 a :Gateway ;
+    rdfs:label "Gateway 1" .
+
+:Asset_Microsoft_SharePoint a :Server ;
+    rdfs:label "Microsoft SharePoint" ;
+    :assetTypeEvidence "heuristica: sem regra -> Server (padrao)" ;
+    :vendorProduct "Microsoft SharePoint" .
+
+:Asset_Qualcomm_Multiple_Chipsets a :Server ;
+    rdfs:label "Qualcomm Multiple Chipsets" ;
+    :assetTypeEvidence "heuristica: sem regra -> Server (padrao)" ;
+    :vendorProduct "Qualcomm Multiple Chipsets" .
+
+:Asset_Workstation_1 a :Workstation ;
+    rdfs:label "Estacao 1" .
+
+:CWE_22 a :ResourceHandlingWeakness ;
+    rdfs:label "CWE-22 Path Traversal" ;
+    :cweId "CWE-22" .
+
+:CWE_352 a :WebClientWeakness ;
+    rdfs:label "CWE-352 Cross-Site Request Forgery" ;
+    :cweId "CWE-352" .
+
+:CWE_434 a :ResourceHandlingWeakness ;
+    rdfs:label "CWE-434 Unrestricted Upload of File with Dangerous Type" ;
+    :cweId "CWE-434" .
+
+:CWE_74 a :InjectionWeakness ;
+    rdfs:label "CWE-74" ;
+    :cweId "CWE-74" .
+
+:CWE_78 a :InjectionWeakness ;
+    rdfs:label "CWE-78 OS Command Injection" ;
+    :cweId "CWE-78" .
+
+:CWE_798 a :AuthenticationWeakness ;
+    rdfs:label "CWE-798 Use of Hard-coded Credentials" ;
+    :cweId "CWE-798" .
+
+:CWE_862 a :AccessControlWeakness ;
+    rdfs:label "CWE-862 Missing Authorization" ;
+    :cweId "CWE-862" .
+
+:CWE_863 a :AccessControlWeakness ;
+    rdfs:label "CWE-863" ;
+    :cweId "CWE-863" .
+
+:CoA_AccessControlFix a :ResolutionAction ;
+    rdfs:label "Corrigir controle de autorizacao" .
+
+:CoA_Decommission a :ResolutionAction ;
+    rdfs:label "Descontinuar o produto (fim de vida)" .
+
+:CoA_RotateCredentials a :ResolutionAction ;
+    rdfs:label "Rotacionar credenciais" .
+
+:MemorySafetyWeakness a owl:Class ;
+    rdfs:label "Seguranca de memoria"@pt ;
+    rdfs:comment "Ex.: CWE-416, CWE-787, CWE-119, CWE-122, CWE-125, CWE-843. Categoria deste trabalho." ;
+    rdfs:subClassOf :Weakness .
+
+:OtherWeakness a owl:Class ;
+    rdfs:label "Outra fraqueza"@pt ;
+    rdfs:comment "CWE sem categoria propria neste trabalho (ex.: CWE-20 generico). Categoria residual." ;
+    rdfs:subClassOf :Weakness .
+
+:RecurrentlyCriticalAsset a owl:Class ;
+    rdfs:label "Ativo com incidentes criticos recorrentes"@pt ;
+    rdfs:comment "Ativo afetado por dois ou mais incidentes distintos com CVSS >= 9.0 (inferido pela regra R3). Nao confundir com criticidade de negocio." ;
+    rdfs:subClassOf :Asset .
+
+:candidateSolution a owl:ObjectProperty ;
+    rdfs:label "solucao candidata"@pt ;
+    rdfs:comment "Inferida por R6: solucao de um caso cujo problema partilha a fraqueza." ;
+    rdfs:domain :Incident ;
+    rdfs:range :ResolutionAction .
+
+:hasAttribute a owl:ObjectProperty ;
+    rdfs:label "tem atributo"@pt ;
+    rdfs:comment "VERIS: atributo CIA afetado." ;
+    rdfs:domain :Incident ;
+    rdfs:range :SecurityState .
+
+:hasProblem a owl:ObjectProperty ;
+    rdfs:label "tem problema"@pt ;
+    rdfs:domain :Case ;
+    rdfs:range :Incident .
+
+:hasSolution a owl:ObjectProperty ;
+    rdfs:label "tem solucao"@pt ;
+    rdfs:domain :Case ;
+    rdfs:range :ResolutionAction .
+
+:isAssetOf a owl:ObjectProperty ;
+    rdfs:label "e ativo de"@pt ;
+    rdfs:domain :Asset ;
+    rdfs:range :Incident .
+
+:sharesActorWith a owl:ObjectProperty,
+        owl:SymmetricProperty ;
+    rdfs:label "partilha ator com"@pt ;
+    rdfs:comment "Inferida por R4 (mesmo ator concreto)." ;
+    rdfs:domain :Incident ;
+    rdfs:range :Incident .
+
+:Actor_APT_B a :ExternalActor ;
+    rdfs:label "Grupo APT-B (externo, espionagem, ficticio)" .
+
+:CWE_287 a :AuthenticationWeakness ;
+    rdfs:label "CWE-287 Improper Authentication" ;
+    :cweId "CWE-287" .
+
+:CWE_502 a :ResourceHandlingWeakness ;
+    rdfs:label "CWE-502 Deserialization of Untrusted Data" ;
+    :cweId "CWE-502" .
+
+:CWE_639 a :AccessControlWeakness ;
+    rdfs:label "CWE-639 Authorization Bypass Through User-Controlled Key" ;
+    :cweId "CWE-639" .
+
+:CWE_77 a :InjectionWeakness ;
+    rdfs:label "CWE-77 Command Injection" ;
+    :cweId "CWE-77" .
+
+:CWE_79 a :WebClientWeakness ;
+    rdfs:label "CWE-79 Cross-site Scripting" ;
+    :cweId "CWE-79" .
+
+:CWE_89 a :InjectionWeakness ;
+    rdfs:label "CWE-89 SQL Injection" ;
+    :cweId "CWE-89" .
+
+:CWE_918 a :RequestForgeryWeakness ;
+    rdfs:label "CWE-918 Server-Side Request Forgery" ;
+    :cweId "CWE-918" .
+
+:CoA_ApplyMitigation a :ResolutionAction ;
+    rdfs:label "Aplicar mitigacao do fornecedor" .
+
+:CoA_Segment a :ResolutionAction ;
+    rdfs:label "Segmentar a rede" .
+
+:CourseOfAction a owl:Class ;
+    rdfs:label "Curso de acao"@pt ;
+    :stixType "course-of-action" ;
+    rdfs:comment "Acao de resposta recomendada ou executada." .
+
+:Detector_EDR_1 a :DetectionSource ;
+    rdfs:label "EDR 1" .
+
+:Detector_IDS_1 a :DetectionSource ;
+    rdfs:label "IDS 1" .
+
+:Detector_SIEM_1 a :DetectionSource ;
+    rdfs:label "SIEM 1" .
+
+:Gateway a owl:Class ;
+    rdfs:label "Gateway"@pt ;
+    rdfs:comment "Dispositivo de fronteira de rede." ;
+    rdfs:subClassOf :Asset .
+
+:Incident_01 a :Incident ;
+    rdfs:label "Injecao de comandos no Servidor 1 (herdado v6; excecao)" ;
+    :detectedBy :Detector_IDS_1 ;
+    :hasAction :Act_01 ;
+    :hasActor :Actor_FIN_A ;
+    :hasAsset :Asset_Server_1 ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2021_4045 ;
+    :mitigatedBy :CoA_Patch .
+
+:Incident_02 a :Incident ;
+    rdfs:label "Desserializacao no Servidor 1 (herdado v6)" ;
+    :detectedBy :Detector_EDR_1 ;
+    :hasAction :Act_02 ;
+    :hasActor :Actor_APT_B ;
+    :hasAsset :Asset_Server_1 ;
+    :hasAttribute :State_Integrity ;
+    :involvesVulnerability :Vuln_CVE_2015_4852 ;
+    :mitigatedBy :CoA_Patch .
+
+:Incident_03 a :Incident ;
+    rdfs:label "IDOR na Base de dados 1 (herdado v6; excecao)" ;
+    :detectedBy :Detector_IDS_1 ;
+    :hasAction :Act_03 ;
+    :hasActor :Actor_FIN_A ;
+    :hasAsset :Asset_Database_1 ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2023_2065 ;
+    :mitigatedBy :CoA_WAFRule .
+
+:Incident_04 a :Incident ;
+    rdfs:label "Injecao de SQL no Servidor 1 (herdado v6)" ;
+    :detectedBy :Detector_SIEM_1 ;
+    :hasAction :Act_04 ;
+    :hasActor :Actor_FIN_A ;
+    :hasAsset :Asset_Server_1 ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2023_34362 ;
+    :mitigatedBy :CoA_Isolate .
+
+:Incident_05 a :Incident ;
+    rdfs:label "XSS na Estacao 1 (herdado v6)" ;
+    :detectedBy :Detector_EDR_1 ;
+    :hasAction :Act_05 ;
+    :hasActor :Actor_UNK_E ;
+    :hasAsset :Asset_Workstation_1 ;
+    :hasAttribute :State_Integrity ;
+    :involvesVulnerability :Vuln_CVE_2020_11022 ;
+    :mitigatedBy :CoA_WAFRule .
+
+:Incident_06 a :Incident ;
+    rdfs:label "SSRF no Gateway 1 (herdado v6)" ;
+    :detectedBy :Detector_SIEM_1 ;
+    :hasAction :Act_06 ;
+    :hasActor :Actor_APT_B ;
+    :hasAsset :Asset_Gateway_1 ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2021_26855 ;
+    :mitigatedBy :CoA_Segment .
+
+:Incident_CVE_2025_20337 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-20337 em Cisco Identity Services Engine (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_20337 ;
+    :hasActor :Actor_Unknown_CVE_2025_20337 ;
+    :hasAsset :Asset_Cisco_Identity_Services_Engine ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_20337 .
+
+:Incident_CVE_2025_21480 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-21480 em Qualcomm Multiple Chipsets (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_21480 ;
+    :hasActor :Actor_Unknown_CVE_2025_21480 ;
+    :hasAsset :Asset_Qualcomm_Multiple_Chipsets ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_21480 .
+
+:Incident_CVE_2025_49706 a :Incident ;
+    rdfs:label "Exploracao conhecida de CVE-2025-49706 em Microsoft SharePoint (CISA KEV)" ;
+    dcterms:source <https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json> ;
+    :hasAction :Act_CVE_2025_49706 ;
+    :hasActor :Actor_Unknown_CVE_2025_49706 ;
+    :hasAsset :Asset_Microsoft_SharePoint ;
+    :hasAttribute :State_Confidentiality ;
+    :involvesVulnerability :Vuln_CVE_2025_49706 .
+
+:State_Integrity a :SecurityState ;
+    rdfs:label "Integridade"@pt .
+
+:Vuln_CVE_2015_4852 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2015-4852> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2015-4852" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 (registo verificado na v3)" ;
+    :hasWeakness :CWE_502 ;
+    :verificationNote "Consistente com o NVD na verificacao nvd check da v3." .
+
+:Vuln_CVE_2020_11022 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2020-11022> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2020-11022" ;
+    :cvssBaseScore 6.1 ;
+    :cvssSource "NVD API 2.0 (nao verificado nesta versao)" ;
+    :hasWeakness :CWE_79 ;
+    :verificationNote "Pendente de nvd check." .
+
+:Vuln_CVE_2021_26855 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2021-26855> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2021-26855" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 (nao verificado nesta versao)" ;
+    :hasWeakness :CWE_918 ;
+    :verificationNote "Pendente de nvd check." .
+
+:Vuln_CVE_2021_4045 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2021-4045> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2021-4045" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 (registo verificado na v3)" ;
+    :hasWeakness :CWE_77 ;
+    :verificationNote "Consistente com o NVD na verificacao nvd check da v3." .
+
+:Vuln_CVE_2023_2065 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2023-2065> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2023-2065" ;
+    :cvssBaseScore 8.8 ;
+    :cvssSource "Secondary (CNA/USOM) CVSS 3.1" ;
+    :hasWeakness :CWE_639 ;
+    :verificationNote "8.8 visto em agregadores (fonte secundaria); v6 usava 8.1. Confirmar com nvd check." .
+
+:Vuln_CVE_2023_34362 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2023-34362> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2023-34362" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 (nao verificado nesta versao)" ;
+    :hasWeakness :CWE_89 ;
+    :verificationNote "Pendente de nvd check." .
+
+:Vuln_CVE_2025_20337 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-20337> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-20337" ;
+    :cvssBaseScore 10.0 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_74 ;
+    :kevDateAdded "2025-07-28"^^xsd:date ;
+    :knownRansomwareUse "Unknown" .
+
+:Vuln_CVE_2025_21480 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-21480> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-21480" ;
+    :cvssBaseScore 8.6 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_863 ;
+    :kevDateAdded "2025-06-03"^^xsd:date ;
+    :knownRansomwareUse "Unknown" .
+
+:Vuln_CVE_2025_49706 a :Vulnerability ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-49706> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2025-49706" ;
+    :cvssBaseScore 6.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_287 ;
+    :kevDateAdded "2025-07-22"^^xsd:date ;
+    :knownRansomwareUse "Known" .
+
+:actor a swrl:Variable .
+
+:hasActor a owl:ObjectProperty ;
+    rdfs:label "tem ator"@pt ;
+    rdfs:comment "VERIS: quem realizou." ;
+    rdfs:domain :Incident ;
+    rdfs:range :ThreatActor .
+
+:hasAsset a owl:ObjectProperty ;
+    rdfs:label "tem ativo"@pt ;
+    rdfs:comment "VERIS: ativo afetado." ;
+    rdfs:domain :Incident ;
+    rdfs:range :Asset ;
+    owl:inverseOf :isAssetOf .
+
+:hasWeakness a owl:ObjectProperty ;
+    rdfs:label "tem fraqueza"@pt ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range :Weakness .
+
+:j a swrl:Variable .
+
+:s1 a swrl:Variable .
+
+:s2 a swrl:Variable .
+
+:sharesWeaknessWith a owl:ObjectProperty,
+        owl:SymmetricProperty ;
+    rdfs:label "partilha fraqueza com"@pt ;
+    rdfs:comment "Inferida por R5 (mesma CWE)." ;
+    rdfs:domain :Incident ;
+    rdfs:range :Incident .
+
+:sol a swrl:Variable .
+
+:w a swrl:Variable .
+
+:Actor_FIN_A a :ExternalActor ;
+    rdfs:label "Grupo FIN-A (externo, motivacao financeira, ficticio)" .
+
+:Asset_Server_1 a :Server ;
+    rdfs:label "Servidor 1" .
+
+:CoA_Isolate a :ResolutionAction ;
+    rdfs:label "Isolar o ativo" .
+
+:Database a owl:Class ;
+    rdfs:label "Base de dados"@pt ;
+    rdfs:comment "Servidor de base de dados." ;
+    rdfs:subClassOf :Asset .
+
+:InternalActor a owl:Class ;
+    rdfs:label "Ator interno"@pt ;
+    :verisCategory "actor.Internal" ;
+    rdfs:comment "Ator da propria organizacao (VERIS actor.Internal)." ;
+    rdfs:subClassOf :ThreatActor .
+
+:PartnerActor a owl:Class ;
+    rdfs:label "Ator parceiro"@pt ;
+    :verisCategory "actor.Partner" ;
+    rdfs:comment "Ator de terceiro com relacao de negocio (VERIS actor.Partner)." ;
+    rdfs:subClassOf :ThreatActor .
+
+:RequestForgeryWeakness a owl:Class ;
+    rdfs:label "Falsificacao de requisicao no servidor"@pt ;
+    rdfs:comment "CWE-918." ;
+    rdfs:subClassOf :Weakness .
+
+:Workstation a owl:Class ;
+    rdfs:label "Estacao de trabalho"@pt ;
+    rdfs:comment "Equipamento de usuario final." ;
+    rdfs:subClassOf :Asset .
+
+:c a swrl:Variable .
+
+:AuthenticationWeakness a owl:Class ;
+    rdfs:label "Autenticacao"@pt ;
+    rdfs:comment "CWE-287, CWE-798." ;
+    rdfs:subClassOf :Weakness .
+
+:CoA_Patch a :ResolutionAction ;
+    rdfs:label "Aplicar correcao (patch)" .
+
+:CoA_WAFRule a :ResolutionAction ;
+    rdfs:label "Implantar regra de firewall/WAF" .
+
+:UnknownActor a owl:Class ;
+    rdfs:label "Ator desconhecido"@pt ;
+    :verisCategory "actor.Unknown" ;
+    rdfs:comment "Ator nao identificado na fonte (VERIS actor.Unknown)." ;
+    rdfs:subClassOf :ThreatActor .
+
+:WebClientWeakness a owl:Class ;
+    rdfs:label "Fraqueza do lado do cliente web"@pt ;
+    rdfs:comment "CWE-79, CWE-352." ;
+    rdfs:subClassOf :Weakness .
+
+:a a swrl:Variable .
+
+:v1 a swrl:Variable .
+
+:v2 a swrl:Variable .
+
+:AccessControlWeakness a owl:Class ;
+    rdfs:label "Controle de acesso"@pt ;
+    rdfs:comment "CWE-639, CWE-862." ;
+    rdfs:subClassOf :Weakness .
+
+:DetectionSource a owl:Class ;
+    rdfs:label "Fonte de deteccao"@pt ;
+    rdfs:comment "IDS, EDR, SIEM." .
+
+:ExternalActor a owl:Class ;
+    rdfs:label "Ator externo"@pt ;
+    :verisCategory "actor.External" ;
+    rdfs:comment "Ator fora da organizacao (VERIS actor.External)." ;
+    rdfs:subClassOf :ThreatActor .
+
+:ResourceHandlingWeakness a owl:Class ;
+    rdfs:label "Tratamento inseguro de recursos"@pt ;
+    rdfs:comment "CWE-22, CWE-434, CWE-502." ;
+    rdfs:subClassOf :Weakness .
+
+:SecurityState a owl:Class ;
+    rdfs:label "Atributo de seguranca"@pt ;
+    :verisCategory "attribute" ;
+    rdfs:comment "Propriedade afetada da triade CIA (VERIS: attribute)." .
+
+:hasRiskLevel a owl:DatatypeProperty ;
+    rdfs:label "nivel de risco"@pt ;
+    rdfs:comment "Derivado do CVSS pelas regras R1a-R1d; valores Critical, High, Medium, Low." ;
+    rdfs:domain :Incident ;
+    rdfs:range xsd:string .
+
+:InjectionWeakness a owl:Class ;
+    rdfs:label "Injecao no servidor"@pt ;
+    rdfs:comment "CWE-77, CWE-78, CWE-89." ;
+    rdfs:subClassOf :Weakness .
+
+:Server a owl:Class ;
+    rdfs:label "Servidor"@pt ;
+    rdfs:comment "Servidor de aplicacao." ;
+    rdfs:subClassOf :Asset .
+
+:cvssBaseScore a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    rdfs:label "pontuacao base CVSS"@pt ;
+    rdfs:comment "CVSS v3.x; funcional (um valor por vulnerabilidade)." ;
+    rdfs:domain :Vulnerability ;
+    rdfs:range xsd:decimal .
+
+:ThreatActor a owl:Class ;
+    rdfs:label "Ator de ameaca"@pt ;
+    :stixType "threat-actor" ;
+    :verisCategory "actor" ;
+    rdfs:comment "Agente concreto que realiza a acao (VERIS: actor)." .
+
+:State_Confidentiality a :SecurityState ;
+    rdfs:label "Confidencialidade"@pt .
+
+:involvesVulnerability a owl:ObjectProperty ;
+    rdfs:label "envolve vulnerabilidade"@pt ;
+    rdfs:domain :Incident ;
+    rdfs:range :Vulnerability .
+
+:v a swrl:Variable .
+
+:i2 a swrl:Variable .
+
+:Asset a owl:Class ;
+    rdfs:label "Ativo"@pt ;
+    :stixType "infrastructure" ;
+    :verisCategory "asset" ;
+    rdfs:comment "Recurso computacional afetado (VERIS: asset). Correspondencia aproximada com STIX infrastructure." .
+
+:s a swrl:Variable .
+
+:i1 a swrl:Variable .
+
+:ResolutionAction a owl:Class ;
+    rdfs:label "Acao de resolucao"@pt ;
+    rdfs:comment "Acao concreta registada como solucao de um caso." ;
+    rdfs:subClassOf :CourseOfAction .
+
+:Weakness a owl:Class ;
+    rdfs:label "Fraqueza"@pt ;
+    rdfs:comment "Entrada do catalogo CWE. As subclasses sao categorias definidas NESTE trabalho para similaridade; nao reproduzem a hierarquia oficial da CWE." .
+
+:ThreatAction a owl:Class ;
+    rdfs:label "Acao de ameaca"@pt ;
+    :verisCategory "action" ;
+    rdfs:comment "Acao concreta realizada num incidente (VERIS: action). Instancia um AttackPattern abstrato." .
+
+:i a swrl:Variable .
+
+:Case a owl:Class ;
+    rdfs:label "Caso"@pt ;
+    rdfs:comment "Caso CBR: par (incidente historico, acao de resolucao registada)." .
+
+:AttackPattern a owl:Class ;
+    rdfs:label "Padrao de ataque"@pt ;
+    :stixType "attack-pattern" ;
+    rdfs:comment "Tipo abstrato de ataque, reutilizavel entre incidentes; nao se liga a ativos concretos." .
+
+:Vulnerability a owl:Class ;
+    rdfs:label "Vulnerabilidade"@pt ;
+    :stixType "vulnerability" ;
+    rdfs:comment "Falha concreta num produto, identificada por CVE quando publica; liga-se a uma fraqueza (CWE)." .
+
+:Incident a owl:Class ;
+    rdfs:label "Incident"@en,
+        "Incidente"@pt ;
+    :stixType "incident" ;
+    :verisCategory "incident" ;
+    rdfs:comment "Evento de seguranca reificado; liga-se aos quatro eixos VERIS A4: ator, acao, ativo e atributo." .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( :Incident_01 :Incident_02 :Incident_03 :Incident_04 :Incident_05 :Incident_06 :Incident_CVE_2025_20337 :Incident_CVE_2025_21480 :Incident_CVE_2025_49706 ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :ExternalActor :InternalActor :PartnerActor ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :Server :Database :Gateway :Workstation ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :InjectionWeakness :WebClientWeakness :AccessControlWeakness :AuthenticationWeakness :ResourceHandlingWeakness :RequestForgeryWeakness ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :Incident :ThreatActor :ThreatAction :AttackPattern :Asset :SecurityState :Vulnerability :Weakness :DetectionSource :CourseOfAction :Case ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :ExternalActor :InternalActor :PartnerActor :UnknownActor ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( :InjectionWeakness :WebClientWeakness :AccessControlWeakness :AuthenticationWeakness :ResourceHandlingWeakness :RequestForgeryWeakness :MemorySafetyWeakness :OtherWeakness ) .
+

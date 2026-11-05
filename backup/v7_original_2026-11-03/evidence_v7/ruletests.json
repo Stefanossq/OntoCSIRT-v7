@@ -1,0 +1,178 @@
+{
+  "passed": 20,
+  "total": 20,
+  "cases": [
+    {
+      "rule": "R1",
+      "test": "CVSS 10.0 -> Critical",
+      "expected": [
+        "Critical"
+      ],
+      "got": [
+        "Critical"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 9.0 -> Critical",
+      "expected": [
+        "Critical"
+      ],
+      "got": [
+        "Critical"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 8.9 -> High",
+      "expected": [
+        "High"
+      ],
+      "got": [
+        "High"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 7.0 -> High",
+      "expected": [
+        "High"
+      ],
+      "got": [
+        "High"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 6.9 -> Medium",
+      "expected": [
+        "Medium"
+      ],
+      "got": [
+        "Medium"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 4.0 -> Medium",
+      "expected": [
+        "Medium"
+      ],
+      "got": [
+        "Medium"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 3.9 -> Low",
+      "expected": [
+        "Low"
+      ],
+      "got": [
+        "Low"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R1",
+      "test": "CVSS 0.1 -> Low",
+      "expected": [
+        "Low"
+      ],
+      "got": [
+        "Low"
+      ],
+      "pass": true
+    },
+    {
+      "rule": "R3",
+      "test": "dois incidentes criticos distintos no mesmo ativo -> RecurrentlyCriticalAsset",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "R3",
+      "test": "um critico + um medio no mesmo ativo -> nao recorrente",
+      "expected": false,
+      "got": false,
+      "pass": true
+    },
+    {
+      "rule": "R4",
+      "test": "mesmo ator concreto -> sharesActorWith",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "R4",
+      "test": "atores distintos da mesma categoria VERIS -> sem sharesActorWith",
+      "expected": false,
+      "got": false,
+      "pass": true
+    },
+    {
+      "rule": "R4",
+      "test": "simetria declarada em OWL",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "R5",
+      "test": "mesma CWE -> sharesWeaknessWith",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "R5",
+      "test": "CWE diferentes -> sem sharesWeaknessWith",
+      "expected": false,
+      "got": false,
+      "pass": true
+    },
+    {
+      "rule": "R5",
+      "test": "incidente nao partilha fraqueza consigo proprio",
+      "expected": false,
+      "got": false,
+      "pass": true
+    },
+    {
+      "rule": "R6",
+      "test": "fraqueza partilhada com problema de caso -> candidateSolution",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "R6",
+      "test": "sem fraqueza partilhada -> sem candidateSolution",
+      "expected": false,
+      "got": false,
+      "pass": true
+    },
+    {
+      "rule": "DL",
+      "test": "risco Critical inferido -> CriticalRiskIncident (classe definida)",
+      "expected": true,
+      "got": true,
+      "pass": true
+    },
+    {
+      "rule": "DL",
+      "test": "risco Medium -> nao CriticalRiskIncident",
+      "expected": false,
+      "got": false,
+      "pass": true
+    }
+  ]
+}

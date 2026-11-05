@@ -1,0 +1,33 @@
+% ---------------------------------------------------------------------------
+% RECONSTRUCAO do sbc-template.sty a partir das "Instructions for Authors of
+% SBC Conferences" (A4, coluna unica, margens 3,5/2,5/3,0 cm, Times 12pt,
+% titulo 16pt negrito, secoes 13pt, legendas Helvetica 10pt negrito).
+% Serve apenas para compilar e medir paginas. SUBSTITUA pelo arquivo oficial
+% da SBC (Overleaf: "SBC Conferences Template") antes de submeter.
+% ---------------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sbc-template}[2026/11/02 reconstrucao para medicao]
+\RequirePackage{mathptmx}
+\RequirePackage[scaled=.92]{helvet}
+\RequirePackage{courier}
+\RequirePackage[a4paper,top=3.5cm,bottom=2.5cm,left=3cm,right=3cm,nohead,nofoot]{geometry}
+\RequirePackage[font={sf,bf,small},labelsep=period,margin=0.8cm]{caption}
+\pagestyle{empty}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{1.27cm}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}{12pt}{3pt}{\normalfont\fontsize{13}{15}\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{12pt}{3pt}{\normalfont\normalsize\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}{6pt}{1pt}{\normalfont\normalsize\bfseries}}
+\renewcommand\thesection{\arabic{section}.}
+\renewcommand\thesubsection{\thesection\arabic{subsection}.}
+\newcommand{\inst}[1]{\unskip$^{#1}$}
+\def\@address{}
+\newcommand{\address}[1]{\gdef\@address{#1}}
+\newcommand{\email}[1]{\par\vspace{6pt}{\fontfamily{pcr}\fontsize{10}{12}\selectfont #1}}
+\renewcommand{\maketitle}{\begin{center}\vspace*{12pt}{\fontsize{16}{19}\bfseries\@title\par}\vspace{12pt}
+  {\bfseries\@author\par}\vspace{12pt}{\@address\par}\end{center}\vspace{6pt}}
+\renewenvironment{abstract}{\begin{list}{}{\leftmargin=0.8cm\rightmargin=0.8cm}\item\relax\textbf{Abstract.}\itshape\ }{\end{list}}
+\newenvironment{resumo}{\begin{list}{}{\leftmargin=0.8cm\rightmargin=0.8cm}\item\relax\textbf{Resumo.}\itshape\ }{\end{list}}
+\renewcommand\refname{Refer\^encias}
+\makeatother

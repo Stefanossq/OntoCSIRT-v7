@@ -1,0 +1,843 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix bb: <http://www.semanticweb.org/ontocsirt/bugbounty#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix swrl: <http://www.w3.org/2003/11/swrl#> .
+@prefix swrlb: <http://www.w3.org/2003/11/swrlb#> .
+
+#############################################################################
+# OntoBugBounty - modulo de Bug Bounty e Seguranca Ofensiva para a OntoCSIRT v7
+#
+# Composicao: OntoCSIRT_v7.ttl + OntoCSIRT_v7_ext.ttl (+ evo) + este modulo (+ OntoBugBounty_data.ttl).
+# Nao ha owl:imports (como na extensao e no modulo de evolucao): os carregadores compoem os ficheiros,
+# e um owl:imports faria o Owlready2 tentar descarregar o IRI do v7.
+#
+# Mesmo espaco de nomes (:) da OntoCSIRT: o modulo REUTILIZA os termos do v7 em vez de os redefinir.
+#   :ThreatActor, :AttackPattern, :Vulnerability, :Weakness ....... classes do v7
+#   :hasWeakness (Vulnerability -> Weakness), :relatedWeakness ..... propriedades do v7
+#   :cveId, :cweId, :cvssBaseScore, :cvssSource .................... dados do v7
+#   :CWE  = alias de :Weakness (no v7 cada CWE ja e um individuo de :Weakness)
+#   :CVE  = classe DEFINIDA: Vulnerability com cveId (o raciocinador classifica sozinho as do v7)
+#
+# Decisoes que divergem do pedido literal, por consistencia com o v7:
+#   * ":exploits" (padrao -> CVE) chama-se :patternExploits. O :exploits do v7 tem dominio :ThreatAction,
+#     que e DISJUNTO de :AttackPattern: reutiliza-lo tornaria a ontologia INCONSISTENTE (verificado com
+#     o HermiT, ver tests/test_bugbounty.py). No v7 a acao concreta explora; aqui o padrao "explora" CVEs
+#     que o exemplificam.
+#   * ":targetsCWE" e subpropriedade de :relatedWeakness (v7): as consultas do v7 veem-na.
+#   * :Researcher NAO e subclasse de :ThreatActor (ver comentario da classe).
+#
+# Os dados de referencia (categorias OWASP, CVEs reais, niveis do Bugcrowd VRT) ficam no bloco GERADO
+# no fim, produzido por `python ingest_bugbounty.py catalog` a partir das fontes; nao edite esse bloco.
+#############################################################################
+
+<http://www.semanticweb.org/ontocsirt/bugbounty> a owl:Ontology ;
+    rdfs:label "OntoBugBounty - modulo de Bug Bounty e Seguranca Ofensiva da OntoCSIRT v7" ;
+    rdfs:comment "Programas de bug bounty, escopo, recompensas, pesquisadores autorizados, relatorios e padroes de ataque do OWASP Top 10 ligados a CVEs reais. Compoe-se com OntoCSIRT_v7.ttl e OntoCSIRT_v7_ext.ttl." ;
+    owl:versionInfo "bb-1" ;
+    dcterms:created "2026-11-04"^^xsd:date ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> .
+
+# --- anotacoes -------------------------------------------------------------
+bb:dataSource a owl:AnnotationProperty ; rdfs:label "fonte do dado"@pt .
+bb:derivation a owl:AnnotationProperty ; rdfs:label "como o valor foi derivado"@pt .
+bb:vrtNode a owl:AnnotationProperty ; rdfs:label "no do Bugcrowd VRT usado"@pt .
+bb:fictional a owl:AnnotationProperty ; rdfs:label "individuo ficticio (exemplo)"@pt .
+
+#############################################################################
+# 1. CLASSES
+#############################################################################
+
+# --- dominio do bug bounty --------------------------------------------------
+:BugBountyPlatform a owl:Class ; rdfs:label "Plataforma de bug bounty"@pt , "Bug bounty platform"@en ;
+    rdfs:comment "Organizacao que hospeda programas (HackerOne, Bugcrowd). Distinta do programa: uma plataforma tem muitos programas." .
+
+:BugBountyProgram a owl:Class ; rdfs:label "Programa de bug bounty"@pt , "Bug bounty program"@en ;
+    rdfs:comment "Politica publica ou privada de uma organizacao que AUTORIZA testes de seguranca dentro de um escopo e define recompensas. E a autorizacao que separa a pesquisa do ataque." .
+
+:Scope a owl:Class ; rdfs:label "Item de escopo"@pt , "Scope item"@en ;
+    rdfs:comment "Um identificador do que pode ser testado (dominio, URL, curinga, bloco CIDR, aplicacao). Descreve ativos; nao e o ativo (por isso e disjunto de :Asset)." .
+
+:Reward a owl:Class ; rdfs:label "Recompensa"@pt , "Reward"@en ;
+    rdfs:comment "Pagamento de um programa por um relatorio valido." .
+
+:Report a owl:Class ; rdfs:label "Relatorio de vulnerabilidade"@pt , "Vulnerability report"@en ;
+    rdfs:comment "Submissao de um pesquisador a um programa. E divulgacao coordenada, nao um incidente: por isso e disjunto de :Incident." .
+
+:OWASPCategory a owl:Class ; rdfs:label "Categoria do OWASP Top 10"@pt ;
+    rdfs:comment "Categoria de uma edicao do OWASP Top 10 (2021 ou 2025), com as CWEs da categoria correspondente do catalogo CWE (vistas 1344 e 1450)." .
+
+# --- pesquisador: classe PARALELA a :ThreatActor -----------------------------
+:Researcher a owl:Class ; rdfs:label "Pesquisador de seguranca"@pt , "Security researcher"@en ;
+    rdfs:comment """Pessoa que testa sistemas COM autorizacao (hacker etico). Nao e subclasse de :ThreatActor:
+(1) no VERIS e no STIX o ator de ameaca e quem causa o incidente; teste autorizado dentro do escopo nao e incidente;
+(2) se fosse subclasse, cada pesquisador entraria nas consultas e regras do v7 sobre atores (R4 sharesActorWith,
+CQ5, faceta de ator do CBR) e seria contado como ameaca pelo SOC;
+(3) a diferenca nao e a tecnica (ambos usam os mesmos padroes de ataque) mas a autorizacao, que e uma relacao
+(:authorizedBy) e nao um tipo.
+As duas classes NAO sao disjuntas: a mesma pessoa pode ter os dois papeis (um gray hat que depois entra num
+programa). A propriedade :uses aceita ambas.""" .
+
+:AuthorizedResearcher a owl:Class ; rdfs:label "Pesquisador autorizado"@pt ;
+    rdfs:comment "Definida em OWL: pesquisador autorizado por pelo menos um programa." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Researcher
+        [ a owl:Restriction ; owl:onProperty :authorizedBy ; owl:someValuesFrom :BugBountyProgram ] ) ] .
+
+:EliteResearcher a owl:Class ; rdfs:subClassOf :Researcher ; rdfs:label "Pesquisador de elite (inferido)"@pt ;
+    rdfs:comment "Inferida pela regra BB-1. Nao confundir com :hasSkillLevel \"Elite\", que e declarado." .
+
+# --- tipos de ator de ameaca (subclasses de :ThreatActor do v7) ---------------
+# Dimensoes diferentes do eixo VERIS do v7 (External/Internal/Partner/Unknown, organizacional):
+# os chapeus classificam pela etica/autorizacao, CyberTerrorist pela motivacao, Phisher pela tecnica.
+# Por isso so as cores de chapeu sao disjuntas entre si; um Phisher pode ser BlackHat e ExternalActor.
+:BlackHat a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Black hat"@en ;
+    rdfs:comment "Ataca sem autorizacao e com intencao maliciosa (ganho, dano)." .
+:GrayHat a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Gray hat"@en ;
+    rdfs:comment "Ataca sem autorizacao, sem intencao maliciosa declarada (p.ex. divulga depois ao dono). Sem autorizacao continua a ser ameaca." .
+:RedHat a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Red hat"@en ;
+    rdfs:comment "Justiceiro que ataca outros atacantes, muitas vezes de forma destrutiva; sem autorizacao." .
+[] a owl:AllDisjointClasses ; owl:members ( :BlackHat :GrayHat :RedHat ) .
+:CyberTerrorist a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Ciberterrorista"@pt ;
+    rdfs:comment "Classificado pela motivacao ideologica ou politica de causar dano ou medo." .
+:Phisher a owl:Class ; rdfs:subClassOf :ThreatActor ; rdfs:label "Phisher"@en ;
+    rdfs:comment "Classificado pela tecnica principal (engenharia social por mensagens)." .
+:InsiderThreat a owl:Class ; rdfs:subClassOf :InternalActor ; rdfs:label "Ameaca interna"@pt ;
+    rdfs:comment "Subclasse de :InternalActor do v7 (logo de :ThreatActor): por definicao e interna." .
+
+# --- aliases para o vocabulario pedido --------------------------------------
+:CWE a owl:Class ; owl:equivalentClass :Weakness ; rdfs:label "CWE"@en ;
+    rdfs:comment "Alias de :Weakness (v7): cada entrada do catalogo CWE ja e um individuo de :Weakness." .
+:CVE a owl:Class ; rdfs:label "CVE"@en ;
+    rdfs:comment "Classe definida: vulnerabilidade com identificador CVE. As vulnerabilidades sinteticas do v7 (sem cveId) nao sao CVE." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Vulnerability
+        [ a owl:Restriction ; owl:onProperty :cveId ; owl:someValuesFrom xsd:string ] ) ] .
+
+# --- disjuncoes com o v7 ------------------------------------------------------
+# Tudo disjunto dos tipos de topo do v7, exceto :Researcher vs :ThreatActor (papeis que podem coincidir).
+[] a owl:AllDisjointClasses ; owl:members ( :Incident :ThreatAction :AttackPattern :Asset :SecurityState
+    :Vulnerability :Weakness :DetectionSource :CourseOfAction :Case
+    :BugBountyPlatform :BugBountyProgram :Scope :Reward :Report :Researcher :OWASPCategory ) .
+[] a owl:AllDisjointClasses ; owl:members ( :ThreatActor :BugBountyPlatform :BugBountyProgram :Scope :Reward
+    :Report :OWASPCategory ) .
+
+#############################################################################
+# 2. PROPRIEDADES DE OBJETO
+#############################################################################
+:uses a owl:ObjectProperty ; rdfs:label "usa"@pt ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( :ThreatActor :Researcher ) ] ; rdfs:range :AttackPattern ;
+    rdfs:comment "Padroes de ataque que o agente domina ou emprega (STIX 2.1: threat-actor uses attack-pattern)." .
+:targets a owl:ObjectProperty ; rdfs:label "tem como alvo"@pt ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( :ThreatActor :Researcher ) ] ;
+    rdfs:range [ a owl:Class ; owl:unionOf ( :Asset :Scope ) ] ;
+    rdfs:comment "Ativo atacado (ator de ameaca) ou item de escopo testado (pesquisador)." .
+:patternExploits a owl:ObjectProperty ; rdfs:label "explora (padrao -> CVE)"@pt ;
+    rdfs:domain :AttackPattern ; rdfs:range :Vulnerability ;
+    rdfs:comment "CVEs reais que o padrao explora/exemplifica. E o ':exploits' pedido; o :exploits do v7 e ao nivel da acao concreta (dominio :ThreatAction, disjunto de :AttackPattern)." .
+:targetsCWE a owl:ObjectProperty ; rdfs:subPropertyOf :relatedWeakness ; rdfs:label "visa a CWE"@pt ;
+    rdfs:domain :AttackPattern ; rdfs:range :Weakness ;
+    rdfs:comment "Fraqueza que o padrao explora. Subpropriedade de :relatedWeakness do v7." .
+:owaspCategory a owl:ObjectProperty ; rdfs:label "categoria OWASP"@pt ; rdfs:domain :AttackPattern ; rdfs:range :OWASPCategory .
+:includesWeakness a owl:ObjectProperty ; rdfs:label "inclui a fraqueza"@pt ; rdfs:domain :OWASPCategory ; rdfs:range :Weakness ;
+    rdfs:comment "Membro da categoria no catalogo CWE (Has_Member), so para CWEs presentes na ontologia." .
+:authorizedBy a owl:ObjectProperty ; rdfs:label "autorizado por"@pt ; rdfs:domain :Researcher ; rdfs:range :BugBountyProgram ;
+    rdfs:comment "Autorizacao para testar dentro do escopo do programa (termos e safe harbor)." .
+:participatedIn a owl:ObjectProperty ; rdfs:subPropertyOf :authorizedBy ; rdfs:label "participou de"@pt ;
+    rdfs:domain :Researcher ; rdfs:range :BugBountyProgram ;
+    rdfs:comment "Participar de um programa e aceitar os seus termos: implica autorizacao (subpropriedade de :authorizedBy)." .
+:hostedOn a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "hospedado em"@pt ;
+    rdfs:domain :BugBountyProgram ; rdfs:range :BugBountyPlatform .
+:hasScope a owl:ObjectProperty ; rdfs:label "tem escopo"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range :Scope .
+:submittedBy a owl:ObjectProperty ; rdfs:label "submetido por"@pt ; rdfs:domain :Report ; rdfs:range :Researcher .
+:submittedTo a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "submetido a"@pt ;
+    rdfs:domain :Report ; rdfs:range :BugBountyProgram .
+:reportsPattern a owl:ObjectProperty ; rdfs:label "relata o padrao"@pt ; rdfs:domain :Report ; rdfs:range :AttackPattern .
+:reportsVulnerability a owl:ObjectProperty ; rdfs:label "relata a vulnerabilidade"@pt ; rdfs:domain :Report ; rdfs:range :Vulnerability .
+:affectsScope a owl:ObjectProperty ; rdfs:label "afeta o item de escopo"@pt ; rdfs:domain :Report ; rdfs:range :Scope .
+:hasReward a owl:ObjectProperty ; rdfs:label "tem recompensa"@pt ; rdfs:domain :Report ; rdfs:range :Reward .
+
+#############################################################################
+# 3. PROPRIEDADES DE DADOS (tipos do mapa do OWL 2: sem xsd:date)
+#############################################################################
+:hasSeverity a owl:DatatypeProperty ; rdfs:label "severidade"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:string ;
+    rdfs:comment "Low, Medium, High ou Critical, pela media do CVSS das CVEs ligadas, com as faixas da regra R1 do v7." .
+:meanCvss a owl:DatatypeProperty ; rdfs:label "CVSS medio"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:decimal .
+:bountyPayout a owl:DatatypeProperty ; rdfs:label "faixa tipica de recompensa"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:string ;
+    rdfs:comment "\"$$$\" (prioridade VRT tipica P1-P2), \"$$\" (P3) ou \"$\" (P4-P5), derivada do Bugcrowd VRT." .
+:vrtPriorityTypical a owl:DatatypeProperty ; rdfs:label "prioridade VRT tipica"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:string .
+:vrtPriorityBest a owl:DatatypeProperty ; rdfs:label "melhor prioridade VRT"@pt ; rdfs:domain :AttackPattern ; rdfs:range xsd:string .
+:hasSkillLevel a owl:DatatypeProperty ; rdfs:label "nivel declarado"@pt ; rdfs:domain :Researcher ; rdfs:range xsd:string ;
+    rdfs:comment "Junior, Senior ou Elite (declarado)." .
+:status a owl:DatatypeProperty ; rdfs:label "estado"@pt ; rdfs:domain :Report ; rdfs:range xsd:string ;
+    rdfs:comment "Estado de triagem. Nao e funcional: \"Priority\" pode ser inferido (BB-2) ao lado do estado declarado." .
+:hasMinBounty a owl:DatatypeProperty ; rdfs:label "recompensa minima"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:decimal .
+:hasMaxBounty a owl:DatatypeProperty ; rdfs:label "recompensa maxima"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:decimal .
+:bountyCurrency a owl:DatatypeProperty ; rdfs:label "moeda"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:string .
+:offersBounties a owl:DatatypeProperty ; rdfs:label "oferece recompensas"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:boolean .
+:programHandle a owl:DatatypeProperty ; rdfs:label "identificador do programa na plataforma"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:string .
+:submissionState a owl:DatatypeProperty ; rdfs:label "estado de submissao"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range xsd:string .
+:scopeIdentifier a owl:DatatypeProperty ; rdfs:label "identificador do escopo"@pt ; rdfs:domain :Scope ; rdfs:range xsd:string .
+:scopeType a owl:DatatypeProperty ; rdfs:label "tipo de escopo"@pt ; rdfs:domain :Scope ; rdfs:range xsd:string .
+:eligibleForBounty a owl:DatatypeProperty ; rdfs:label "elegivel para recompensa"@pt ; rdfs:domain :Scope ; rdfs:range xsd:boolean .
+:eligibleForSubmission a owl:DatatypeProperty ; rdfs:label "elegivel para submissao"@pt ; rdfs:domain :Scope ; rdfs:range xsd:boolean .
+:maxSeverity a owl:DatatypeProperty ; rdfs:label "severidade maxima aceite"@pt ; rdfs:domain :Scope ; rdfs:range xsd:string .
+:rewardAmount a owl:DatatypeProperty ; rdfs:label "valor"@pt ; rdfs:domain :Reward ; rdfs:range xsd:decimal .
+:rewardCurrency a owl:DatatypeProperty ; rdfs:label "moeda"@pt ; rdfs:domain :Reward ; rdfs:range xsd:string .
+:owaspCode a owl:DatatypeProperty ; rdfs:label "codigo OWASP"@pt ; rdfs:domain :OWASPCategory ; rdfs:range xsd:string .
+:owaspEdition a owl:DatatypeProperty ; rdfs:label "edicao OWASP"@pt ; rdfs:domain :OWASPCategory ; rdfs:range xsd:string .
+:cweGroupingId a owl:DatatypeProperty ; rdfs:label "categoria no catalogo CWE"@pt ; rdfs:domain :OWASPCategory ; rdfs:range xsd:string .
+
+#############################################################################
+# 4. REGRAS SWRL (coesas com o v7: mesma fronteira CVSS >= 9,0 da R1a; Pellet)
+#############################################################################
+bb:r a swrl:Variable . bb:ap a swrl:Variable . bb:v a swrl:Variable . bb:s a swrl:Variable . bb:rep a swrl:Variable .
+
+# BB-1: Researcher(?r) ^ uses(?r,?ap) ^ patternExploits(?ap,?v) ^ cvssBaseScore(?v,?s) ^ swrlb:greaterThanOrEqual(?s,9.0)
+#       -> EliteResearcher(?r)
+:BB1_EliteResearcher a swrl:Imp ; rdfs:label "BB-1 - pesquisador que domina um padrao com CVE critica (CVSS >= 9,0) e de elite" ;
+  swrl:body ( [ a swrl:ClassAtom ; swrl:classPredicate :Researcher ; swrl:argument1 bb:r ]
+              [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate :uses ; swrl:argument1 bb:r ; swrl:argument2 bb:ap ]
+              [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate :patternExploits ; swrl:argument1 bb:ap ; swrl:argument2 bb:v ]
+              [ a swrl:DatavaluedPropertyAtom ; swrl:propertyPredicate :cvssBaseScore ; swrl:argument1 bb:v ; swrl:argument2 bb:s ]
+              [ a swrl:BuiltinAtom ; swrl:builtin swrlb:greaterThanOrEqual ; swrl:arguments ( bb:s "9.0"^^xsd:decimal ) ] ) ;
+  swrl:head ( [ a swrl:ClassAtom ; swrl:classPredicate :EliteResearcher ; swrl:argument1 bb:r ] ) .
+
+# BB-2: Report(?rep) ^ submittedBy(?rep,?r) ^ EliteResearcher(?r) ^ reportsPattern(?rep,?ap) ^ bountyPayout(?ap,"$$$")
+#       -> status(?rep,"Priority")
+:BB2_PriorityReport a swrl:Imp ; rdfs:label "BB-2 - relatorio de elite sobre padrao de recompensa alta ($$$) e prioritario" ;
+  swrl:body ( [ a swrl:ClassAtom ; swrl:classPredicate :Report ; swrl:argument1 bb:rep ]
+              [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate :submittedBy ; swrl:argument1 bb:rep ; swrl:argument2 bb:r ]
+              [ a swrl:ClassAtom ; swrl:classPredicate :EliteResearcher ; swrl:argument1 bb:r ]
+              [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate :reportsPattern ; swrl:argument1 bb:rep ; swrl:argument2 bb:ap ]
+              [ a swrl:DatavaluedPropertyAtom ; swrl:propertyPredicate :bountyPayout ; swrl:argument1 bb:ap ; swrl:argument2 "$$$" ] ) ;
+  swrl:head ( [ a swrl:DatavaluedPropertyAtom ; swrl:propertyPredicate :status ; swrl:argument1 bb:rep ; swrl:argument2 "Priority" ] ) .
+
+#############################################################################
+# 5. INDIVIDUOS DE EXEMPLO (curados a mao)
+#   Plataformas: reais. Programas, escopos, recompensas, pesquisadores e relatorios: FICTICIOS
+#   (bb:fictional), com dominios reservados para documentacao (RFC 2606/5737). Nada aqui afirma algo
+#   sobre programas ou pessoas reais; os programas reais entram por `ingest_bugbounty.py hackerone`.
+#############################################################################
+:Platform_HackerOne a :BugBountyPlatform ; rdfs:label "HackerOne" ; dcterms:source <https://www.hackerone.com> .
+:Platform_Bugcrowd a :BugBountyPlatform ; rdfs:label "Bugcrowd" ; dcterms:source <https://www.bugcrowd.com> .
+
+:Program_DemoFintech a :BugBountyProgram ; rdfs:label "Programa de exemplo - fintech (HackerOne)" ; bb:fictional true ;
+    :hostedOn :Platform_HackerOne ; :offersBounties true ;
+    :hasMinBounty "100"^^xsd:decimal ; :hasMaxBounty "15000"^^xsd:decimal ; :bountyCurrency "USD" ;
+    :hasScope :Scope_DemoFintech_App , :Scope_DemoFintech_Api , :Scope_DemoFintech_Net .
+:Scope_DemoFintech_App a :Scope ; :scopeIdentifier "app.example.com" ; :scopeType "URL" ;
+    :eligibleForBounty true ; :eligibleForSubmission true ; :maxSeverity "critical" .
+:Scope_DemoFintech_Api a :Scope ; :scopeIdentifier "api.example.com" ; :scopeType "URL" ;
+    :eligibleForBounty true ; :eligibleForSubmission true ; :maxSeverity "critical" .
+:Scope_DemoFintech_Net a :Scope ; :scopeIdentifier "192.0.2.0/24" ; :scopeType "CIDR" ;
+    :eligibleForBounty false ; :eligibleForSubmission true ; :maxSeverity "medium" .
+
+:Program_DemoSaaS a :BugBountyProgram ; rdfs:label "Programa de exemplo - SaaS (Bugcrowd)" ; bb:fictional true ;
+    :hostedOn :Platform_Bugcrowd ; :offersBounties true ;
+    :hasMinBounty "50"^^xsd:decimal ; :hasMaxBounty "5000"^^xsd:decimal ; :bountyCurrency "USD" ;
+    :hasScope :Scope_DemoSaaS_Wildcard .
+:Scope_DemoSaaS_Wildcard a :Scope ; :scopeIdentifier "*.example.org" ; :scopeType "WILDCARD" ;
+    :eligibleForBounty true ; :eligibleForSubmission true ; :maxSeverity "critical" .
+
+# Seis personas (uma por padrao); o nivel e DECLARADO, a classe :EliteResearcher e INFERIDA (BB-1).
+:Researcher_IDOR a :Researcher ; rdfs:label "Persona 1 - especialista em IDOR (ficticia)" ; bb:fictional true ;
+    :uses :AP_IDOR ; :hasSkillLevel "Senior" ; :participatedIn :Program_DemoFintech ; :targets :Scope_DemoFintech_Api .
+:Researcher_XSS a :Researcher ; rdfs:label "Persona 2 - especialista em XSS (ficticia)" ; bb:fictional true ;
+    :uses :AP_XSS ; :hasSkillLevel "Junior" ; :participatedIn :Program_DemoSaaS ; :targets :Scope_DemoSaaS_Wildcard .
+:Researcher_SQLi a :Researcher ; rdfs:label "Persona 3 - especialista em injecao de SQL (ficticia)" ; bb:fictional true ;
+    :uses :AP_SQLInjection ; :hasSkillLevel "Elite" ; :participatedIn :Program_DemoFintech , :Program_DemoSaaS .
+:Researcher_SSRF a :Researcher ; rdfs:label "Persona 4 - especialista em SSRF (ficticia)" ; bb:fictional true ;
+    :uses :AP_SSRF ; :hasSkillLevel "Senior" ; :participatedIn :Program_DemoSaaS .
+:Researcher_CmdInjection a :Researcher ; rdfs:label "Persona 5 - especialista em injecao de comandos (ficticia)" ; bb:fictional true ;
+    :uses :AP_CommandInjection ; :hasSkillLevel "Elite" ; :participatedIn :Program_DemoFintech .
+:Researcher_Deserialization a :Researcher ; rdfs:label "Persona 6 - especialista em desserializacao (ficticia)" ; bb:fictional true ;
+    :uses :AP_Deserialization ; :hasSkillLevel "Junior" ; :participatedIn :Program_DemoSaaS .
+
+# Relatorios de exemplo (exercitam a BB-2)
+:Report_001 a :Report ; rdfs:label "SQLi na API de pagamentos (exemplo)" ; bb:fictional true ;
+    :submittedBy :Researcher_SQLi ; :submittedTo :Program_DemoFintech ; :reportsPattern :AP_SQLInjection ;
+    :affectsScope :Scope_DemoFintech_Api ; :status "Triaged" ; :hasReward :Reward_001 .
+:Reward_001 a :Reward ; :rewardAmount "7500"^^xsd:decimal ; :rewardCurrency "USD" ; bb:fictional true .
+:Report_002 a :Report ; rdfs:label "XSS refletido na area de suporte (exemplo)" ; bb:fictional true ;
+    :submittedBy :Researcher_XSS ; :submittedTo :Program_DemoSaaS ; :reportsPattern :AP_XSS ;
+    :affectsScope :Scope_DemoSaaS_Wildcard ; :status "Triaged" .
+:Report_003 a :Report ; rdfs:label "Injecao de comandos no exportador (exemplo)" ; bb:fictional true ;
+    :submittedBy :Researcher_CmdInjection ; :submittedTo :Program_DemoFintech ; :reportsPattern :AP_CommandInjection ;
+    :affectsScope :Scope_DemoFintech_App ; :status "New" .
+
+#############################################################################
+# 6. DADOS DE REFERENCIA - BLOCO GERADO (nao editar a mao)
+#############################################################################
+# >>> BEGIN GENERATED: python ingest_bugbounty.py catalog
+# Gerado em 2026-11-04. Fontes no rdfs:comment/bb:dataSource de cada individuo.
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix bb: <http://www.semanticweb.org/ontocsirt/bugbounty#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:AP_CSRF :bountyPayout "$" ;
+    :hasSeverity "High" ;
+    :meanCvss 8.57 ;
+    :owaspCategory :OWASP_2021_A01,
+        :OWASP_2025_A01 ;
+    :patternExploits :Vuln_CVE_2008_4128,
+        :Vuln_CVE_2023_2533,
+        :Vuln_CVE_2025_62593 ;
+    :targetsCWE :CWE_352 ;
+    :vrtPriorityBest "P2" ;
+    :vrtPriorityTypical "P5" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (8.57) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [2; 5; 5; 5] -> P5 -> $" ;
+    bb:vrtNode "cross_site_request_forgery_csrf" .
+
+:AP_CommandInjection :bountyPayout "$$$" ;
+    :hasSeverity "Critical" ;
+    :meanCvss 9.2 ;
+    :owaspCategory :OWASP_2021_A03,
+        :OWASP_2025_A05 ;
+    :patternExploits :Vuln_CVE_2026_105134,
+        :Vuln_CVE_2026_106931,
+        :Vuln_CVE_2026_110447 ;
+    :targetsCWE :CWE_77,
+        :CWE_78 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P1" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (9.20) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1; 1] -> P1 -> $$$" ;
+    bb:vrtNode "insecure_os_firmware.command_injection",
+        "server_side_injection.remote_code_execution_rce" .
+
+:AP_CredentialAbuse :bountyPayout "$$$" ;
+    :hasSeverity "High" ;
+    :meanCvss 7.67 ;
+    :owaspCategory :OWASP_2021_A07,
+        :OWASP_2025_A07 ;
+    :patternExploits :Vuln_CVE_2026_105133,
+        :Vuln_CVE_2026_42018,
+        :Vuln_CVE_2026_59822 ;
+    :targetsCWE :CWE_287 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P1" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (7.67) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1] -> P1 -> $$$" ;
+    bb:vrtNode "broken_authentication_and_session_management.authentication_bypass" .
+
+:AP_Deserialization :bountyPayout "$$$" ;
+    :hasSeverity "Critical" ;
+    :meanCvss 9.8 ;
+    :owaspCategory :OWASP_2021_A08,
+        :OWASP_2025_A08 ;
+    :patternExploits :Vuln_CVE_2021_23758,
+        :Vuln_CVE_2026_50522,
+        :Vuln_CVE_2026_63077 ;
+    :targetsCWE :CWE_502 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P1" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (9.80) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1] -> P1 -> $$$; nota: o VRT nao tem classe de desserializacao insegura; estes relatorios sao classificados pelo impacto; tipicamente execucao remota de codigo (server_side_injection.remote_code_execution_rce)" ;
+    bb:vrtNode "server_side_injection.remote_code_execution_rce" .
+
+:AP_IDOR :bountyPayout "$$" ;
+    :hasSeverity "Medium" ;
+    :meanCvss 5.55 ;
+    :owaspCategory :OWASP_2021_A01,
+        :OWASP_2025_A01 ;
+    :patternExploits :Vuln_CVE_2026_100268,
+        :Vuln_CVE_2026_55255 ;
+    :targetsCWE :CWE_639 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P3" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (5.55) de 2 CVEs reais (1 do KEV; 1 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1; 2; 3; 4; 5] -> P3 -> $$" ;
+    bb:vrtNode "broken_access_control.idor" .
+
+:AP_SQLInjection :bountyPayout "$$$" ;
+    :hasSeverity "Critical" ;
+    :meanCvss 9.83 ;
+    :owaspCategory :OWASP_2021_A03,
+        :OWASP_2025_A05 ;
+    :patternExploits :Vuln_CVE_2026_114625,
+        :Vuln_CVE_2026_76461,
+        :Vuln_CVE_2026_9586 ;
+    :targetsCWE :CWE_89 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P1" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (9.83) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1] -> P1 -> $$$" ;
+    bb:vrtNode "server_side_injection.sql_injection" .
+
+:AP_SSRF :bountyPayout "$" ;
+    :hasSeverity "High" ;
+    :meanCvss 8.1 ;
+    :owaspCategory :OWASP_2021_A10,
+        :OWASP_2025_A01 ;
+    :patternExploits :Vuln_CVE_2026_49869,
+        :Vuln_CVE_2026_83548,
+        :Vuln_CVE_2026_96655 ;
+    :targetsCWE :CWE_918 ;
+    :vrtPriorityBest "P2" ;
+    :vrtPriorityTypical "P4" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (8.10) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [2; 3; 3; 4; 4; 5; 5] -> P4 -> $" ;
+    bb:vrtNode "server_security_misconfiguration.server_side_request_forgery_ssrf" .
+
+:AP_XSS :bountyPayout "$$" ;
+    :hasSeverity "Medium" ;
+    :meanCvss 6.1 ;
+    :owaspCategory :OWASP_2021_A03,
+        :OWASP_2025_A05 ;
+    :patternExploits :Vuln_CVE_2025_48700,
+        :Vuln_CVE_2025_68461,
+        :Vuln_CVE_2026_42897 ;
+    :targetsCWE :CWE_79 ;
+    :vrtPriorityBest "P2" ;
+    :vrtPriorityTypical "P3" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (6.10) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [2; 3; 3; 3; 4; 5; 5] -> P3 -> $$" ;
+    bb:vrtNode "cross_site_scripting_xss.reflected",
+        "cross_site_scripting_xss.stored" .
+
+:AP_XXE a :AttackPattern ;
+    rdfs:label "Injecao de entidade externa XML (XXE)" ;
+    :bountyPayout "$$$" ;
+    :hasSeverity "High" ;
+    :meanCvss 8.27 ;
+    :owaspCategory :OWASP_2021_A05,
+        :OWASP_2025_A02 ;
+    :patternExploits :Vuln_CVE_2023_45727,
+        :Vuln_CVE_2025_2775,
+        :Vuln_CVE_2025_58360 ;
+    :targetsCWE :CWE_611 ;
+    :vrtPriorityBest "P1" ;
+    :vrtPriorityTypical "P1" ;
+    bb:derivation "severidade = faixa R1 da media do CVSS (8.27) de 3 CVEs reais (3 do KEV; 0 so do NVD por CWE) com CVSS do NVD; recompensa = mediana (inferior) das prioridades do Bugcrowd VRT 2026-07-08T00:00:00+00:00 [1] -> P1 -> $$$" ;
+    bb:vrtNode "server_side_injection.xml_external_entity_injection_xxe" .
+
+:OWASP_2021_A02 a :OWASPCategory ;
+    rdfs:label "A02:2021 - Cryptographic Failures" ;
+    :cweGroupingId "CWE-1346" ;
+    :owaspCode "A02:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A04 a :OWASPCategory ;
+    rdfs:label "A04:2021 - Insecure Design" ;
+    :cweGroupingId "CWE-1348" ;
+    :includesWeakness :CWE_434 ;
+    :owaspCode "A04:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A06 a :OWASPCategory ;
+    rdfs:label "A06:2021 - Vulnerable and Outdated Components" ;
+    :cweGroupingId "CWE-1352" ;
+    :owaspCode "A06:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A09 a :OWASPCategory ;
+    rdfs:label "A09:2021 - Security Logging and Monitoring Failures" ;
+    :cweGroupingId "CWE-1355" ;
+    :owaspCode "A09:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2025_A03 a :OWASPCategory ;
+    rdfs:label "A03:2025 - Software Supply Chain Failures" ;
+    :cweGroupingId "CWE-1438" ;
+    :owaspCode "A03:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A04 a :OWASPCategory ;
+    rdfs:label "A04:2025 - Cryptographic Failures" ;
+    :cweGroupingId "CWE-1439" ;
+    :owaspCode "A04:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A06 a :OWASPCategory ;
+    rdfs:label "A06:2025 - Insecure Design" ;
+    :cweGroupingId "CWE-1441" ;
+    :includesWeakness :CWE_434 ;
+    :owaspCode "A06:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A09 a :OWASPCategory ;
+    rdfs:label "A09:2025 - Logging & Alerting Failures" ;
+    :cweGroupingId "CWE-1444" ;
+    :owaspCode "A09:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A10 a :OWASPCategory ;
+    rdfs:label "A10:2025 - Mishandling of Exceptional Conditions" ;
+    :cweGroupingId "CWE-1445" ;
+    :owaspCode "A10:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2021_A05 a :OWASPCategory ;
+    rdfs:label "A05:2021 - Security Misconfiguration" ;
+    :cweGroupingId "CWE-1349" ;
+    :includesWeakness :CWE_611 ;
+    :owaspCode "A05:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A07 a :OWASPCategory ;
+    rdfs:label "A07:2021 - Identification and Authentication Failures" ;
+    :cweGroupingId "CWE-1353" ;
+    :includesWeakness :CWE_287,
+        :CWE_798 ;
+    :owaspCode "A07:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A08 a :OWASPCategory ;
+    rdfs:label "A08:2021 - Software and Data Integrity Failures" ;
+    :cweGroupingId "CWE-1354" ;
+    :includesWeakness :CWE_502 ;
+    :owaspCode "A08:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A10 a :OWASPCategory ;
+    rdfs:label "A10:2021 - Server-Side Request Forgery (SSRF)" ;
+    :cweGroupingId "CWE-1356" ;
+    :includesWeakness :CWE_918 ;
+    :owaspCode "A10:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2025_A02 a :OWASPCategory ;
+    rdfs:label "A02:2025 - Security Misconfiguration" ;
+    :cweGroupingId "CWE-1437" ;
+    :includesWeakness :CWE_611 ;
+    :owaspCode "A02:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A07 a :OWASPCategory ;
+    rdfs:label "A07:2025 - Authentication Failures" ;
+    :cweGroupingId "CWE-1442" ;
+    :includesWeakness :CWE_287,
+        :CWE_798 ;
+    :owaspCode "A07:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A08 a :OWASPCategory ;
+    rdfs:label "A08:2025 - Software or Data Integrity Failures" ;
+    :cweGroupingId "CWE-1443" ;
+    :includesWeakness :CWE_502 ;
+    :owaspCode "A08:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:Vuln_CVE_2008_4128 a :Vulnerability ;
+    rdfs:label "CVE-2008-4128 Cisco IOS" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2008-4128> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2008-4128" ;
+    :cvssBaseScore 8.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_352 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-07-13) + NVD API 2.0" .
+
+:Vuln_CVE_2021_23758 a :Vulnerability ;
+    rdfs:label "CVE-2021-23758 Ajax.NET Professional Ajax.NET Professional" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2021-23758> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2021-23758" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_502 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-08-26) + NVD API 2.0" .
+
+:Vuln_CVE_2023_2533 a :Vulnerability ;
+    rdfs:label "CVE-2023-2533 PaperCut NG/MF" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2023-2533> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2023-2533" ;
+    :cvssBaseScore 8.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_352 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2025-07-28) + NVD API 2.0" .
+
+:Vuln_CVE_2023_45727 a :Vulnerability ;
+    rdfs:label "CVE-2023-45727 North Grid Proself" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2023-45727> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2023-45727" ;
+    :cvssBaseScore 7.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_611 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2024-12-03) + NVD API 2.0" .
+
+:Vuln_CVE_2025_2775 a :Vulnerability ;
+    rdfs:label "CVE-2025-2775 SysAid SysAid On-Prem" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-2775> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-2775" ;
+    :cvssBaseScore 7.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_611 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2025-07-22) + NVD API 2.0" .
+
+:Vuln_CVE_2025_48700 a :Vulnerability ;
+    rdfs:label "CVE-2025-48700 Synacor Zimbra Collaboration Suite (ZCS)" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-48700> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2025-48700" ;
+    :cvssBaseScore 6.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_79 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-04-20) + NVD API 2.0" .
+
+:Vuln_CVE_2025_58360 a :Vulnerability ;
+    rdfs:label "CVE-2025-58360 OSGeo GeoServer" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-58360> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-58360" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_611 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2025-12-11) + NVD API 2.0" .
+
+:Vuln_CVE_2025_62593 a :Vulnerability ;
+    rdfs:label "CVE-2025-62593 Ray-Project Ray" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-62593> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2025-62593" ;
+    :cvssBaseScore 8.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_352 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-08-17) + NVD API 2.0" .
+
+:Vuln_CVE_2025_68461 a :Vulnerability ;
+    rdfs:label "CVE-2025-68461 Roundcube Webmail" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2025-68461> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2025-68461" ;
+    :cvssBaseScore 6.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_79 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-02-20) + NVD API 2.0" .
+
+:Vuln_CVE_2026_100268 a :Vulnerability ;
+    rdfs:label "CVE-2026-100268 Jetbrains youtrack" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-100268> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2026-100268" ;
+    :cvssBaseScore 2.7 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_639 ;
+    bb:dataSource "NVD API 2.0 cweId=CWE-639 (publicada em 2026-09-30; fora do KEV: exploracao nao confirmada)" .
+
+:Vuln_CVE_2026_105133 a :Vulnerability ;
+    rdfs:label "CVE-2026-105133 Ahsay AhsayCBS" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-105133> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2026-105133" ;
+    :cvssBaseScore 7.3 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_287 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-14) + NVD API 2.0" .
+
+:Vuln_CVE_2026_105134 a :Vulnerability ;
+    rdfs:label "CVE-2026-105134 Ahsay AhsayCBS" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-105134> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-105134" ;
+    :cvssBaseScore 10.0 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_78 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-14) + NVD API 2.0" .
+
+:Vuln_CVE_2026_106931 a :Vulnerability ;
+    rdfs:label "CVE-2026-106931 EG Secure Solutions SiteGuard Server Edition" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-106931> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-106931" ;
+    :cvssBaseScore 7.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.0 Secondary" ;
+    :hasWeakness :CWE_78 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-20) + NVD API 2.0" .
+
+:Vuln_CVE_2026_110447 a :Vulnerability ;
+    rdfs:label "CVE-2026-110447 Collabora Collabora Online – Built-in CODE Server" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-110447> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-110447" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_78 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-23) + NVD API 2.0" .
+
+:Vuln_CVE_2026_114625 a :Vulnerability ;
+    rdfs:label "CVE-2026-114625 Arista VeloCloud Orchestrator" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-114625> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-114625" ;
+    :cvssBaseScore 9.9 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_89 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-23) + NVD API 2.0" .
+
+:Vuln_CVE_2026_42018 a :Vulnerability ;
+    rdfs:label "CVE-2026-42018 JFrog Artifactory" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-42018> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-42018" ;
+    :cvssBaseScore 7.5 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_287 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-11) + NVD API 2.0" .
+
+:Vuln_CVE_2026_42897 a :Vulnerability ;
+    rdfs:label "CVE-2026-42897 Microsoft Microsoft" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-42897> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2026-42897" ;
+    :cvssBaseScore 6.1 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_79 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-05-15) + NVD API 2.0" .
+
+:Vuln_CVE_2026_49869 a :Vulnerability ;
+    rdfs:label "CVE-2026-49869 Kestra Kestra OSS" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-49869> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-49869" ;
+    :cvssBaseScore 10.0 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_918 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-02) + NVD API 2.0" .
+
+:Vuln_CVE_2026_50522 a :Vulnerability ;
+    rdfs:label "CVE-2026-50522 Microsoft SharePoint" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-50522> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-50522" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_502 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-07-22) + NVD API 2.0" .
+
+:Vuln_CVE_2026_55255 a :Vulnerability ;
+    rdfs:label "CVE-2026-55255 Langflow Langflow" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-55255> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-55255" ;
+    :cvssBaseScore 8.4 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_639 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-07-07) + NVD API 2.0" .
+
+:Vuln_CVE_2026_59822 a :Vulnerability ;
+    rdfs:label "CVE-2026-59822 BerriAI LiteLLM" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-59822> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-59822" ;
+    :cvssBaseScore 8.2 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_287 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-02) + NVD API 2.0" .
+
+:Vuln_CVE_2026_63077 a :Vulnerability ;
+    rdfs:label "CVE-2026-63077 JetBrains TeamCity" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-63077> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-63077" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_502 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-08-05) + NVD API 2.0" .
+
+:Vuln_CVE_2026_76461 a :Vulnerability ;
+    rdfs:label "CVE-2026-76461 Cisco Secure Email Gateway" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-76461> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-76461" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_89 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-14) + NVD API 2.0" .
+
+:Vuln_CVE_2026_83548 a :Vulnerability ;
+    rdfs:label "CVE-2026-83548 SonicWall SMA1000 Appliances" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-83548> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-83548" ;
+    :cvssBaseScore 10.0 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_918 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-02) + NVD API 2.0" .
+
+:Vuln_CVE_2026_9586 a :Vulnerability ;
+    rdfs:label "CVE-2026-9586 Sangoma Switchvox" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-9586> ;
+    :confidentialityImpact "HIGH" ;
+    :cveId "CVE-2026-9586" ;
+    :cvssBaseScore 9.8 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Primary" ;
+    :hasWeakness :CWE_89 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-09-02) + NVD API 2.0" .
+
+:Vuln_CVE_2026_96655 a :Vulnerability ;
+    rdfs:label "CVE-2026-96655 Plex Media Server" ;
+    dcterms:source <https://nvd.nist.gov/vuln/detail/CVE-2026-96655> ;
+    :confidentialityImpact "LOW" ;
+    :cveId "CVE-2026-96655" ;
+    :cvssBaseScore 4.3 ;
+    :cvssSource "NVD API 2.0 CVSS 3.1 Secondary" ;
+    :hasWeakness :CWE_918 ;
+    bb:dataSource "CISA KEV 2026.10.30 (incluida em 2026-10-20) + NVD API 2.0" .
+
+:OWASP_2021_A01 a :OWASPCategory ;
+    rdfs:label "A01:2021 - Broken Access Control" ;
+    :cweGroupingId "CWE-1345" ;
+    :includesWeakness :CWE_22,
+        :CWE_352,
+        :CWE_639,
+        :CWE_862 ;
+    :owaspCode "A01:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2021_A03 a :OWASPCategory ;
+    rdfs:label "A03:2021 - Injection" ;
+    :cweGroupingId "CWE-1347" ;
+    :includesWeakness :CWE_77,
+        :CWE_78,
+        :CWE_79,
+        :CWE_89 ;
+    :owaspCode "A03:2021" ;
+    :owaspEdition "2021" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1344 (Weaknesses in OWASP Top Ten (2021))" .
+
+:OWASP_2025_A01 a :OWASPCategory ;
+    rdfs:label "A01:2025 - Broken Access Control" ;
+    :cweGroupingId "CWE-1436" ;
+    :includesWeakness :CWE_22,
+        :CWE_352,
+        :CWE_639,
+        :CWE_862,
+        :CWE_918 ;
+    :owaspCode "A01:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:OWASP_2025_A05 a :OWASPCategory ;
+    rdfs:label "A05:2025 - Injection" ;
+    :cweGroupingId "CWE-1440" ;
+    :includesWeakness :CWE_77,
+        :CWE_78,
+        :CWE_79,
+        :CWE_89 ;
+    :owaspCode "A05:2025" ;
+    :owaspEdition "2025" ;
+    bb:dataSource "MITRE CWE 5.0, vista CWE-1450 (Weaknesses in OWASP Top Ten RC1 (2025))" .
+
+:CWE_611 a :ResourceHandlingWeakness ;
+    rdfs:label "CWE-611 Improper Restriction of XML External Entity Reference" ;
+    :cweId "CWE-611" .
+
+# <<< END GENERATED

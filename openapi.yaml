@@ -1,0 +1,374 @@
+openapi: 3.1.0
+info:
+  title: OntoCSIRT v7 - Webhook SOAR
+  version: 7.0.0
+  summary: Recomendação de resposta a incidentes por ontologia OWL 2 DL, regras SWRL (Pellet) e CBR.
+  description: |
+    Serviço HTTP de `soar_webhook.py` para Shuffle, Cortex XSOAR, TheHive ou outro SOAR.
+
+    **POST /alert** normaliza o alerta (VERIS A4), cria o incidente, raciocina com o Pellet (risco R1,
+    fraqueza partilhada R5, solução candidata R6) e recupera os casos mais semelhantes (CBR).
+    Se o `cve` do alerta não existir na ontologia, o serviço consulta o NVD em tempo real (cache de 24 h,
+    limite de 5 ou 50 pedidos por 30 s), valida o novo ramo `Vulnerability`/`Weakness` com SHACL e HermiT,
+    grava-o no ficheiro de dados e só depois raciocina. Se o NVD falhar, a resposta é o *fallback* de
+    revisão manual (`ManualReview`), também com HTTP 200.
+
+    A ação devolvida é uma **recomendação** (apoio à decisão). `confidence` não é uma probabilidade
+    calibrada: é a similaridade do caso mais próximo × a fração ponderada dos vizinhos que concordam.
+    Abaixo de `--min-confidence` (0,5 por omissão), `requires_human_approval` é `true`.
+
+    Este produto usa dados da API do NVD, mas não é endossado nem certificado pelo NVD.
+  license:
+    name: CC BY 4.0 (ontologia)
+    url: https://creativecommons.org/licenses/by/4.0/
+servers:
+  - url: http://127.0.0.1:8088
+    description: docker compose up (porta publicada só em localhost)
+security:
+  - ontocsirtToken: []
+tags:
+  - name: alertas
+  - name: casos
+  - name: operação
+paths:
+  /alert:
+    post:
+      tags: [alertas]
+      operationId: postAlert
+      summary: Recomenda uma ação de resposta para um alerta de SIEM/IDS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Alert'}
+            examples:
+              cveNova:
+                summary: CVE ausente da ontologia (dispara o enriquecimento NVD)
+                value: {src_ip: 198.51.100.23, attack_type: cmdi, target: Gateway_1, cve: CVE-2024-3400,
+                        attribute: confidentiality, alert_id: TESTE-1}
+              semCve:
+                summary: Alerta sem CVE (só attack_type e CVSS)
+                value: {src_ip: 1.2.3.4, attack_type: SQLi, target: Server_1, cvss: 9.1}
+      responses:
+        '200':
+          description: |
+            Recomendação (`Recommendation`) ou, se a CVE não estiver na base e o NVD não permitir
+            adquiri-la, revisão manual (`ManualReview`, com `fallback: true`). Ramifique o playbook em
+            `requires_human_approval`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Recommendation'
+                  - $ref: '#/components/schemas/ManualReview'
+              examples:
+                recomendacao:
+                  summary: CVE-2024-3400 adquirida do NVD (resposta real; NVD a partir do registo guardado)
+                  value:
+                    alert_id: TESTE_1
+                    incident: Incident_Alert_TESTE_1
+                    action: Apply patch
+                    action_iri: CoA_Patch
+                    playbook: open_patch_ticket
+                    confidence: 0.359
+                    requires_human_approval: true
+                    confidence_definition: sim(top1) x fracao ponderada dos top-3 que votam na acao; nao calibrada
+                    support: {top1_similarity: 0.75, vote_share: 0.479, agreeing_cases: [Incident_01]}
+                    neighbors:
+                      - {case_incident: Incident_01, similarity: 0.75, solution: CoA_Patch}
+                      - {case_incident: Incident_06, similarity: 0.45, solution: CoA_Segment}
+                      - {case_incident: Incident_04, similarity: 0.3667, solution: CoA_Isolate}
+                    risk_level: Critical
+                    rule_inferences: {R5_sharesWeaknessWith: [Incident_01], R5_count: 1, R6_candidateSolution: [CoA_Patch]}
+                    assumptions: ["CVE-2024-3400 adquirida do NVD em tempo real (api): CVSS 10.0, CWE-77",
+                                  "CWE da vulnerabilidade CVE-2024-3400 na base: CWE-77"]
+                    warnings: []
+                    nvd_enrichment:
+                      vulnerability: Vuln_CVE_2024_3400
+                      cwe: CWE-77
+                      category: CommandInjectionWeakness
+                      cwe_source: nvd
+                      cvss: 10.0
+                      cvss_version: '3.1'
+                      vuln_status: Analyzed
+                      cve: CVE-2024-3400
+                      status: written
+                      nvd: {source: api, attempts: 1, rate_limit_wait_seconds: 0.0}
+                      triples: 11
+                      seconds: 3.28
+                    reasoner: {name: Pellet (Owlready2 0.46), consistent: true, seconds: 1.82}
+                    kb: {file: OntoCSIRT_v7_real.ttl, incidents: 19}
+                    elapsed_seconds: 6.56
+                    mode: "decision-support: a acao e uma recomendacao; a execucao automatica e decisao do SOAR"
+                nvdIndisponivel:
+                  summary: "CVE ausente e NVD fora do ar (resposta real; o passo NVD dura no maximo --nvd-max-wait, 35 s por omissao: ate 3 tentativas com esperas de 6 s e 12 s)"
+                  value:
+                    alert_id: TESTE_2
+                    action: manual_review
+                    action_iri: null
+                    playbook: manual_triage
+                    confidence: 0.0
+                    requires_human_approval: true
+                    reason: CVE nao encontrado na base e API NVD indisponivel
+                    fallback: true
+                    nvd: {cve: CVE-2024-3400, error: nvd_unavailable,
+                          detail: "NVD inacessivel (sem rede ou API fora do ar): ConnectionError"}
+                    assumptions: ["CWE inferido do attack_type: CWE-78", "atributo CIA nao informado: assumido Integrity"]
+                    mode: "decision-support: sem a vulnerabilidade na base nao ha recomendacao automatica"
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+        '422':
+          description: O alerta tornaria a base inconsistente (Pellet).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '500': {$ref: '#/components/responses/InternalError'}
+  /retain:
+    post:
+      tags: [casos]
+      operationId: postRetain
+      summary: Retém como caso CBR a ação aprovada por um analista para um alerta já tratado
+      description: |
+        Etapas *revise* e *retain* do CBR. O incidente do alerta e um `:Case` com
+        `solutionProvenance "analyst:retain"` são gravados no ficheiro de dados depois de SHACL + HermiT
+        (+ Pellet) e passam a ser recuperáveis. Só disponível com `--kb OntoCSIRT_v7_real.ttl` ou
+        `OntoCSIRT_v7.ttl` e `--acquired`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RetainRequest'}
+            example: {alert_id: TESTE-1, solution: CoA_Isolate, analyst: Analista 1,
+                      rationale: "Exfiltracao em curso: isolar antes de corrigir."}
+      responses:
+        '200':
+          description: Caso gravado.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetainResult'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404':
+          description: O alerta não foi tratado por este processo (ou saiu da memória de 200 alertas recentes).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '409':
+          description: Incidente já retido.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '422':
+          description: O caso não passou no portão (p.ex. alerta sem CVSS).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetainResult'}
+        '501':
+          description: Retenção indisponível para a base carregada.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+  /health:
+    get:
+      tags: [operação]
+      operationId: getHealth
+      summary: Estado do serviço e da base carregada
+      security: []
+      responses:
+        '200':
+          description: Serviço ativo.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Health'}
+              example: {status: ok, kb: OntoCSIRT_v7_real.ttl, incidents: 19, reasoner: pellet}
+components:
+  securitySchemes:
+    ontocsirtToken:
+      type: apiKey
+      in: header
+      name: X-OntoCSIRT-Token
+      description: Igual a ONTOCSIRT_TOKEN (obrigatório no docker-compose). Sem token configurado, o serviço não autentica.
+  responses:
+    BadRequest:
+      description: Alerta inválido (campo ausente ou mal formado, JSON inválido).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {error: "cve mal formado"}
+    Unauthorized:
+      description: Cabeçalho X-OntoCSIRT-Token ausente ou errado.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {error: token invalido}
+    TooLarge:
+      description: Corpo maior que 16 KiB.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    InternalError:
+      description: Falha interna (o serviço continua ativo).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  schemas:
+    Alert:
+      type: object
+      required: [src_ip, attack_type, target]
+      properties:
+        src_ip: {type: string, description: IPv4 ou IPv6 de origem (vira um ator VERIS externo), examples: [198.51.100.23]}
+        attack_type:
+          type: string
+          description: |
+            Tipo de ataque do SIEM/IDS; maiúsculas e "_" são ignorados (SQLi = sqli, path_traversal = path traversal).
+            Aceites: sqli, sql injection, xss, cross-site scripting, csrf, cmdi, command injection, rce, idor,
+            authz bypass, brute force, bruteforce, credential stuffing, hardcoded credentials, path traversal, lfi,
+            file upload, webshell, deserialization, ssrf. Outro valor -> 400.
+          examples: [SQLi, cmdi, path traversal]
+        target: {type: string, description: "Ativo afetado (Server_1, Database_2, Gateway_1...); prefixo desconhecido = Server", examples: [Gateway_1]}
+        alert_id: {type: string, maxLength: 60, description: Identificador do alerta (por omissão, o instante em ms)}
+        cve: {type: string, pattern: '^CVE-\d{4}-\d{4,}$', description: Se ausente da ontologia, é adquirida do NVD em tempo real}
+        cwe: {type: string, pattern: '^CWE-\d+$', description: "Tem de existir na base; usada no ramo NVD só se o NVD não atribuir CWE"}
+        cvss: {type: number, minimum: 0, maximum: 10, description: "Usado só quando o alerta não traz uma CVE conhecida/adquirida (o CVSS do NVD prevalece)"}
+        attribute: {type: string, enum: [confidentiality, integrity, availability]}
+    Recommendation:
+      type: object
+      required: [alert_id, incident, action, action_iri, playbook, confidence, requires_human_approval, neighbors,
+                 risk_level, rule_inferences, assumptions, warnings, nvd_enrichment, reasoner, kb, elapsed_seconds, mode]
+      properties:
+        alert_id: {type: string}
+        incident: {type: string, description: Indivíduo OWL criado para o alerta}
+        action: {type: [string, "null"], description: Nome legível da ação}
+        action_iri: {type: [string, "null"], description: "ResolutionAction da ontologia (CoA_Patch, CoA_Isolate...)"}
+        playbook: {type: [string, "null"], description: Sub-playbook sugerido ao SOAR}
+        confidence: {type: number, minimum: 0, maximum: 1}
+        requires_human_approval: {type: boolean}
+        confidence_definition: {type: string}
+        support:
+          type: object
+          properties:
+            top1_similarity: {type: number}
+            vote_share: {type: number}
+            agreeing_cases: {type: array, items: {type: string}}
+        neighbors:
+          type: array
+          items:
+            type: object
+            required: [case_incident, similarity, solution]
+            properties:
+              case_incident: {type: string}
+              similarity: {type: number}
+              solution: {type: string}
+        risk_level: {type: [string, "null"], enum: [Critical, High, Medium, Low, null], description: Inferido pelo Pellet (R1a-R1d)}
+        rule_inferences:
+          type: object
+          properties:
+            R5_sharesWeaknessWith: {type: array, items: {type: string}}
+            R5_count: {type: integer}
+            R6_candidateSolution: {type: array, items: {type: string}}
+        assumptions: {type: array, items: {type: string}, description: Decisões tomadas por falta de dados no alerta}
+        warnings: {type: array, items: {type: string}, description: Violações SHACL do alerta (não bloqueiam)}
+        nvd_enrichment:
+          oneOf:
+            - type: "null"
+            - $ref: '#/components/schemas/NvdEnrichment'
+        reasoner:
+          type: object
+          properties:
+            name: {type: string}
+            consistent: {type: boolean}
+            seconds: {type: number}
+        kb:
+          type: object
+          properties:
+            file: {type: string}
+            incidents: {type: integer}
+        elapsed_seconds: {type: number}
+        mode: {type: string}
+    NvdEnrichment:
+      type: object
+      description: Presente quando a CVE do alerta foi adquirida do NVD neste pedido.
+      required: [cve, status]
+      properties:
+        cve: {type: string}
+        status: {type: string, enum: [written, present]}
+        vulnerability: {type: string}
+        cwe: {type: string}
+        category: {type: string, description: Categoria de fraqueza da ontologia (inclui as criadas pela evolução)}
+        cwe_source: {type: string}
+        cvss: {type: number}
+        cvss_version: {type: string}
+        vuln_status: {type: [string, "null"]}
+        nvd:
+          type: object
+          properties:
+            source: {type: string, enum: [api, cache]}
+            age_seconds: {type: number}
+            attempts: {type: integer}
+            rate_limit_wait_seconds: {type: number}
+        written: {type: string}
+        triples: {type: integer}
+        gate: {type: object}
+        seconds: {type: number}
+    ManualReview:
+      type: object
+      required: [alert_id, action, action_iri, playbook, confidence, requires_human_approval, reason, fallback, nvd]
+      properties:
+        alert_id: {type: string}
+        action: {const: manual_review}
+        action_iri: {type: "null"}
+        playbook: {const: manual_triage}
+        confidence: {const: 0.0}
+        requires_human_approval: {const: true}
+        reason:
+          type: string
+          enum:
+            - CVE nao encontrado na base e API NVD indisponivel
+            - CVE nao encontrado na base nem no NVD
+            - CVE nao encontrado na base e o registo do NVD nao permite criar o ramo
+        fallback: {const: true}
+        nvd:
+          type: object
+          required: [cve, error, detail]
+          properties:
+            cve: {type: string}
+            error: {type: string, enum: [nvd_unavailable, cve_not_found, enrichment_rejected]}
+            detail: {type: string}
+        assumptions: {type: array, items: {type: string}}
+        mode: {type: string}
+        elapsed_seconds: {type: number}
+    RetainRequest:
+      type: object
+      required: [alert_id, solution, analyst, rationale]
+      properties:
+        alert_id: {type: string}
+        solution: {type: string, description: "ResolutionAction existente (CoA_Isolate, CoA_Patch...)"}
+        analyst: {type: string, minLength: 1}
+        rationale: {type: string, minLength: 10}
+    RetainResult:
+      type: object
+      required: [case, incident, solution, status, gate_code]
+      properties:
+        case: {type: string}
+        incident: {type: string}
+        solution: {type: string}
+        status: {type: string, enum: [written, blocked]}
+        gate_code: {type: integer, description: "0 gravado; 1 SHACL; 2 inconsistente; 4 classes insatisfazíveis"}
+        violations: {type: array, items: {type: string}}
+        hermit: {type: [object, "null"]}
+        pellet: {type: [object, "null"]}
+    Health:
+      type: object
+      required: [status, kb, incidents, reasoner]
+      properties:
+        status: {const: ok}
+        kb: {type: string}
+        incidents: {type: integer}
+        reasoner: {type: string, enum: [pellet, none]}
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+        alert_id: {type: string}

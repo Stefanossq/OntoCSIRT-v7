@@ -1,0 +1,88 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix bb: <http://www.semanticweb.org/ontocsirt/bugbounty#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# Restricoes de mundo fechado do modulo OntoBugBounty. Aplicadas JUNTO com shapes_v7.ttl, shapes_ingest.ttl e
+# shapes_evo.ttl (ingest_bugbounty.validate), com inferencia RDFS (subclasses e subpropriedades).
+
+:BBPrefixes a owl:Ontology ;
+  sh:declare [ sh:prefix "" ; sh:namespace "http://www.semanticweb.org/ontocsirt#"^^xsd:anyURI ] .
+
+# --- pedidos ---------------------------------------------------------------------------
+# 1. Todo programa tem pelo menos um item de escopo.
+:BugBountyProgramShape a sh:NodeShape ; sh:targetClass :BugBountyProgram ;
+  sh:property [ sh:path :hasScope ; sh:minCount 1 ; sh:class :Scope ;
+                sh:message "Programa sem escopo: todo :BugBountyProgram precisa de pelo menos um :Scope." ] ;
+  sh:property [ sh:path rdfs:label ; sh:minCount 1 ; sh:message "Programa sem nome (rdfs:label)." ] ;
+  sh:property [ sh:path :hostedOn ; sh:maxCount 1 ; sh:class :BugBountyPlatform ; sh:message "Programa em mais de uma plataforma ou plataforma invalida." ] ;
+  sh:property [ sh:path :hasMinBounty ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ;
+                sh:lessThanOrEquals :hasMaxBounty ; sh:message "Recompensa minima invalida ou maior que a maxima." ] ;
+  sh:property [ sh:path :hasMaxBounty ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ;
+                sh:message "Recompensa maxima invalida." ] ;
+  sh:property [ sh:path :bountyCurrency ; sh:maxCount 1 ; sh:pattern "^[A-Z]{3}$" ; sh:message "Moeda deve ser um codigo ISO 4217 (3 letras)." ] .
+
+# 2. Todo pesquisador tem um nivel declarado.
+:ResearcherShape a sh:NodeShape ; sh:targetClass :Researcher ;
+  sh:property [ sh:path :hasSkillLevel ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "Junior" "Senior" "Elite" ) ;
+                sh:message "Pesquisador sem nivel (Junior, Senior ou Elite) ou com mais de um." ] ;
+  sh:property [ sh:path :uses ; sh:class :AttackPattern ; sh:message ":uses deve apontar para um :AttackPattern." ] ;
+  sh:property [ sh:path :participatedIn ; sh:class :BugBountyProgram ; sh:message ":participatedIn deve apontar para um programa." ] .
+
+# 3. Todo relatorio esta ligado a um programa VALIDO (que cumpre a forma do programa).
+:ReportShape a sh:NodeShape ; sh:targetClass :Report ;
+  sh:property [ sh:path :submittedTo ; sh:minCount 1 ; sh:maxCount 1 ; sh:class :BugBountyProgram ;
+                sh:node :BugBountyProgramShape ;
+                sh:message "Relatorio sem programa, com mais de um, ou ligado a um programa que nao cumpre as suas restricoes." ] ;
+  sh:property [ sh:path :submittedBy ; sh:minCount 1 ; sh:class :Researcher ; sh:message "Relatorio sem pesquisador." ] ;
+  sh:property [ sh:path :reportsPattern ; sh:minCount 1 ; sh:class :AttackPattern ; sh:message "Relatorio sem padrao de ataque." ] ;
+  sh:property [ sh:path :status ; sh:minCount 1 ;
+                sh:in ( "New" "Triaged" "Priority" "Resolved" "Duplicate" "Informative" "NotApplicable" ) ;
+                sh:message "Estado do relatorio fora do vocabulario." ] ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :BBPrefixes ;
+    sh:message "O item de escopo {?s} nao pertence ao programa {?p} a que o relatorio foi submetido." ;
+    sh:select """SELECT $this ?s ?p WHERE { $this :affectsScope ?s ; :submittedTo ?p .
+                 FILTER NOT EXISTS { ?p :hasScope ?s } }""" ] .
+
+# --- coerencia do resto do modulo ----------------------------------------------------------
+:ScopeShape a sh:NodeShape ; sh:targetClass :Scope ;
+  sh:property [ sh:path :scopeIdentifier ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                sh:message "Item de escopo sem identificador (dominio, URL, CIDR...)." ] ;
+  sh:property [ sh:path :scopeType ; sh:maxCount 1 ; sh:pattern "^[A-Z][A-Z0-9_]*$" ; sh:message "Tipo de escopo mal formado." ] ;
+  sh:property [ sh:path [ sh:inversePath :hasScope ] ; sh:minCount 1 ; sh:message "Item de escopo que nao pertence a nenhum programa." ] .
+
+:RewardShape a sh:NodeShape ; sh:targetClass :Reward ;
+  sh:property [ sh:path :rewardAmount ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ;
+                sh:message "Recompensa sem valor decimal nao negativo." ] ;
+  sh:property [ sh:path :rewardCurrency ; sh:minCount 1 ; sh:pattern "^[A-Z]{3}$" ; sh:message "Recompensa sem moeda ISO 4217." ] .
+
+# Padroes OWASP do modulo (os que tem :owaspCategory): pelo menos 2 CVEs, severidade e recompensa no vocabulario.
+:OWASPPatternShape a sh:NodeShape ; sh:targetSubjectsOf :owaspCategory ;
+  sh:property [ sh:path :targetsCWE ; sh:minCount 1 ; sh:class :Weakness ; sh:message "Padrao OWASP sem CWE." ] ;
+  sh:property [ sh:path :patternExploits ; sh:minCount 2 ; sh:class :Vulnerability ; sh:node :CVEShape ;
+                sh:message "Padrao OWASP com menos de 2 CVEs (ou CVE sem identificador)." ] ;
+  sh:property [ sh:path :hasSeverity ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "Low" "Medium" "High" "Critical" ) ;
+                sh:message "Severidade ausente ou fora de Low/Medium/High/Critical." ] ;
+  sh:property [ sh:path :bountyPayout ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "$" "$$" "$$$" ) ;
+                sh:message "Faixa de recompensa ausente ou fora de $, $$, $$$." ] ;
+  sh:property [ sh:path :meanCvss ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 10 ;
+                sh:message "CVSS medio fora de [0, 10]." ] .
+
+:CVEShape a sh:NodeShape ;
+  sh:property [ sh:path :cveId ; sh:minCount 1 ; sh:pattern "^CVE-[0-9]{4}-[0-9]{4,}$" ; sh:message "CVE sem identificador valido." ] .
+
+:OWASPCategoryShape a sh:NodeShape ; sh:targetClass :OWASPCategory ;
+  sh:property [ sh:path :owaspCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^A(0[1-9]|10):20[0-9]{2}$" ;
+                sh:message "Codigo OWASP mal formado (ex.: A01:2021)." ] ;
+  sh:property [ sh:path :owaspEdition ; sh:minCount 1 ; sh:maxCount 1 ; sh:message "Categoria OWASP sem edicao." ] .
+
+# Aviso (nao bloqueia), so faz sentido no grafo INFERIDO (depois do Pellet): a classe :EliteResearcher vem da
+# regra BB-1; quando o nivel declarado e Junior, a divergencia merece revisao humana.
+# SPARQL com STR(): o Pellet devolve "Junior"^^xsd:string, que o rdflib distingue do literal simples "Junior"
+# (no RDF 1.1 sao o mesmo literal); um sh:hasValue "Junior" nao o apanharia.
+:EliteVsDeclaredShape a sh:NodeShape ; sh:targetClass :EliteResearcher ; sh:severity sh:Warning ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :BBPrefixes ;
+    sh:message "Classificado como :EliteResearcher pela regra BB-1, mas o nivel declarado e Junior." ;
+    sh:select """SELECT $this WHERE { $this :hasSkillLevel ?l . FILTER(STR(?l) = "Junior") }""" ] .

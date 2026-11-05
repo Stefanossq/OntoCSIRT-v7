@@ -1,0 +1,39 @@
+[
+ {
+  "id": "EVO-20261103-001",
+  "version": "evo-1",
+  "kind": "new_class",
+  "new_classes": [
+   "MemoryBufferBoundsWeakness"
+  ],
+  "new_properties": [],
+  "members": [
+   "CWE_787",
+   "CWE_125",
+   "CWE_416"
+  ],
+  "retractions": {},
+  "proposed_by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+  "approved_by": "Stefano Camargo",
+  "applied_on": "2026-11-03T23:59:37",
+  "signal": "heterogeneous:MemorySafetyWeakness"
+ },
+ {
+  "id": "EVO-20261103-002",
+  "version": "evo-2",
+  "kind": "new_class",
+  "new_classes": [
+   "CommandInjectionWeakness"
+  ],
+  "new_properties": [],
+  "members": [
+   "CWE_77",
+   "CWE_78"
+  ],
+  "retractions": {},
+  "proposed_by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+  "approved_by": "Stefano Camargo",
+  "applied_on": "2026-11-03T23:59:58",
+  "signal": "heterogeneous:InjectionWeakness"
+ }
+]

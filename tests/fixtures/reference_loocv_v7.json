@@ -1,0 +1,599 @@
+{
+  "n_queries": 24,
+  "solution_distribution": {
+    "CoA_Patch": 7,
+    "CoA_WAFRule": 5,
+    "CoA_Isolate": 4,
+    "CoA_Segment": 2,
+    "CoA_AccessControlFix": 3,
+    "CoA_RotateCredentials": 3
+  },
+  "weights": {
+    "weakness": 0.35,
+    "pattern": 0.15,
+    "asset": 0.2,
+    "attribute": 0.2,
+    "actor": 0.1
+  },
+  "summary": {
+    "majority": {
+      "description": "classe majoritaria (sempre a solucao mais frequente)",
+      "acc1": 0.292,
+      "p3": 0.292,
+      "coverage": 1.0
+    },
+    "v6_join": {
+      "description": "juncao do v6: mesma categoria de ator OU mesma CWE, sem ranking",
+      "acc1": 0.25,
+      "p3": 0.243,
+      "coverage": 1.0
+    },
+    "actor": {
+      "description": "so mesmo ator concreto (R4), sem ranking",
+      "acc1": 0.244,
+      "p3": 0.231,
+      "coverage": 1.0
+    },
+    "rule_R6": {
+      "description": "so mesma CWE via regra R5/R6, sem ranking",
+      "acc1": 0.5,
+      "p3": 0.222,
+      "coverage": 0.792
+    },
+    "v7_eq": {
+      "description": "similaridade v7 com pesos iguais",
+      "acc1": 0.625,
+      "p3": 0.451,
+      "coverage": 1.0
+    },
+    "v7": {
+      "description": "similaridade v7 com pesos definidos a priori",
+      "acc1": 0.688,
+      "p3": 0.486,
+      "coverage": 1.0
+    }
+  },
+  "ablation_acc1_without": {
+    "weakness": 0.493,
+    "pattern": 0.521,
+    "asset": 0.675,
+    "attribute": 0.667,
+    "actor": 0.681
+  },
+  "per_query": [
+    {
+      "query": "Incident_01",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_04",
+          0.675,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_22",
+          0.575,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_08",
+          0.515,
+          "CoA_Patch"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_02",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_18",
+          0.94,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_13",
+          0.615,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_12",
+          0.425,
+          "CoA_Patch"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_03",
+      "true_solution": "CoA_WAFRule",
+      "n_relevant": 4,
+      "v7_top3": [
+        [
+          "Incident_17",
+          0.84,
+          "CoA_AccessControlFix"
+        ],
+        [
+          "Incident_24",
+          0.8,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_09",
+          0.575,
+          "CoA_AccessControlFix"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_04",
+      "true_solution": "CoA_Isolate",
+      "n_relevant": 3,
+      "v7_top3": [
+        [
+          "Incident_07",
+          0.75,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_01",
+          0.675,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_19",
+          0.6,
+          "CoA_Patch"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_05",
+      "true_solution": "CoA_WAFRule",
+      "n_relevant": 4,
+      "v7_top3": [
+        [
+          "Incident_23",
+          0.95,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_15",
+          0.69,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_14",
+          0.615,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_06",
+      "true_solution": "CoA_Segment",
+      "n_relevant": 1,
+      "v7_top3": [
+        [
+          "Incident_16",
+          0.95,
+          "CoA_Segment"
+        ],
+        [
+          "Incident_22",
+          0.45,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_10",
+          0.4,
+          "CoA_RotateCredentials"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_07",
+      "true_solution": "CoA_Isolate",
+      "n_relevant": 3,
+      "v7_top3": [
+        [
+          "Incident_04",
+          0.75,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_19",
+          0.69,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_22",
+          0.475,
+          "CoA_Isolate"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_08",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_22",
+          0.55,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_01",
+          0.515,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_04",
+          0.365,
+          "CoA_Isolate"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_09",
+      "true_solution": "CoA_AccessControlFix",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_20",
+          0.7,
+          "CoA_AccessControlFix"
+        ],
+        [
+          "Incident_17",
+          0.615,
+          "CoA_AccessControlFix"
+        ],
+        [
+          "Incident_03",
+          0.575,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_10",
+      "true_solution": "CoA_RotateCredentials",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_21",
+          0.525,
+          "CoA_RotateCredentials"
+        ],
+        [
+          "Incident_06",
+          0.4,
+          "CoA_Segment"
+        ],
+        [
+          "Incident_16",
+          0.4,
+          "CoA_Segment"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_11",
+      "true_solution": "CoA_RotateCredentials",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_21",
+          0.5,
+          "CoA_RotateCredentials"
+        ],
+        [
+          "Incident_13",
+          0.45,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_18",
+          0.45,
+          "CoA_Patch"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_12",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_01",
+          0.5,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_04",
+          0.5,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_24",
+          0.44,
+          "CoA_Isolate"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_13",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_18",
+          0.675,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_02",
+          0.615,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_11",
+          0.45,
+          "CoA_RotateCredentials"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_14",
+      "true_solution": "CoA_WAFRule",
+      "n_relevant": 4,
+      "v7_top3": [
+        [
+          "Incident_05",
+          0.615,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_23",
+          0.565,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_15",
+          0.425,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_15",
+      "true_solution": "CoA_WAFRule",
+      "n_relevant": 4,
+      "v7_top3": [
+        [
+          "Incident_05",
+          0.69,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_23",
+          0.69,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_14",
+          0.425,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_16",
+      "true_solution": "CoA_Segment",
+      "n_relevant": 1,
+      "v7_top3": [
+        [
+          "Incident_06",
+          0.95,
+          "CoA_Segment"
+        ],
+        [
+          "Incident_22",
+          0.5,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_10",
+          0.4,
+          "CoA_RotateCredentials"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_17",
+      "true_solution": "CoA_AccessControlFix",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_03",
+          0.84,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_24",
+          0.7,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_09",
+          0.615,
+          "CoA_AccessControlFix"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_18",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_02",
+          0.94,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_13",
+          0.675,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_11",
+          0.45,
+          "CoA_RotateCredentials"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_19",
+      "true_solution": "CoA_Patch",
+      "n_relevant": 6,
+      "v7_top3": [
+        [
+          "Incident_07",
+          0.69,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_04",
+          0.6,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_03",
+          0.3,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_20",
+      "true_solution": "CoA_AccessControlFix",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_09",
+          0.7,
+          "CoA_AccessControlFix"
+        ],
+        [
+          "Incident_24",
+          0.515,
+          "CoA_Isolate"
+        ],
+        [
+          "Incident_01",
+          0.4,
+          "CoA_Patch"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_21",
+      "true_solution": "CoA_RotateCredentials",
+      "n_relevant": 2,
+      "v7_top3": [
+        [
+          "Incident_10",
+          0.525,
+          "CoA_RotateCredentials"
+        ],
+        [
+          "Incident_11",
+          0.5,
+          "CoA_RotateCredentials"
+        ],
+        [
+          "Incident_17",
+          0.5,
+          "CoA_AccessControlFix"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_22",
+      "true_solution": "CoA_Isolate",
+      "n_relevant": 3,
+      "v7_top3": [
+        [
+          "Incident_01",
+          0.575,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_08",
+          0.55,
+          "CoA_Patch"
+        ],
+        [
+          "Incident_16",
+          0.5,
+          "CoA_Segment"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_23",
+      "true_solution": "CoA_WAFRule",
+      "n_relevant": 4,
+      "v7_top3": [
+        [
+          "Incident_05",
+          0.95,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_15",
+          0.69,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_14",
+          0.565,
+          "CoA_WAFRule"
+        ]
+      ]
+    },
+    {
+      "query": "Incident_24",
+      "true_solution": "CoA_Isolate",
+      "n_relevant": 3,
+      "v7_top3": [
+        [
+          "Incident_03",
+          0.8,
+          "CoA_WAFRule"
+        ],
+        [
+          "Incident_17",
+          0.7,
+          "CoA_AccessControlFix"
+        ],
+        [
+          "Incident_20",
+          0.515,
+          "CoA_AccessControlFix"
+        ]
+      ]
+    }
+  ],
+  "relevance": "caso relevante = mesma solucao registada (a solucao nao entra na similaridade)",
+  "exceptions": [
+    "Incident_01",
+    "Incident_03",
+    "Incident_24"
+  ]
+}

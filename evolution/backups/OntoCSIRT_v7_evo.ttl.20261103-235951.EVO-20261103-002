@@ -1,0 +1,86 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix evo: <http://www.semanticweb.org/ontocsirt/evo#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+#############################################################################
+# OntoCSIRT v7 - modulo de EVOLUCAO ESTRUTURAL (TBox aditiva).
+#
+# Regras deste modulo (aplicadas por ontoevo/ e verificadas em tests/):
+#  - O OntoCSIRT_v7.ttl (artigo) e o OntoCSIRT_v7_ext.ttl nao sao alterados: toda a evolucao
+#    estrutural aprovada e ACRESCENTADA aqui, bloco a bloco, com proveniencia por axioma.
+#  - Evolucao monotona: classes, subclasses, propriedades e classificacoes novas; nada e apagado.
+#    Uma unica retracao e permitida, nos ficheiros de DADOS: sair da categoria residual
+#    (:residualCategory true) quando um individuo ganha uma categoria propria.
+#  - Cada bloco so entra depois de: proposta (Gemini ou analista) -> compilacao deterministica ->
+#    SHACL (v7 + ingestao + evo) -> HermiT (consistencia, classes insatisfaziveis, equivalencias
+#    nao declaradas) -> Pellet com SWRL -> questoes de competencia do v7 -> aprovacao humana.
+#############################################################################
+
+<http://www.semanticweb.org/ontocsirt/evo> a owl:Ontology ;
+    rdfs:label "OntoCSIRT v7 - modulo de evolucao estrutural" ;
+    rdfs:comment "Classes, subclasses e relacoes descobertas a partir dos dados e aprovadas por um analista. Cada axioma tem evo:proposalId." ;
+    owl:versionInfo "evo-1" ;
+    dcterms:created "2026-11-03"^^xsd:date .
+
+# --- proveniencia da evolucao ---------------------------------------------
+evo:proposalId a owl:AnnotationProperty ; rdfs:label "identificador da proposta"@pt .
+evo:proposedBy a owl:AnnotationProperty ; rdfs:label "proposto por (modelo ou analista)"@pt .
+evo:approvedBy a owl:AnnotationProperty ; rdfs:label "aprovado por"@pt .
+evo:approvedOn a owl:AnnotationProperty ; rdfs:label "data da aprovacao"@pt .
+evo:rationale a owl:AnnotationProperty ; rdfs:label "justificativa"@pt .
+evo:evidence a owl:AnnotationProperty ; rdfs:label "evidencia (fonte e identificador)"@pt .
+evo:signal a owl:AnnotationProperty ; rdfs:label "sinal estrutural que originou a proposta"@pt .
+evo:classifiedBy a owl:AnnotationProperty ; rdfs:label "proposta que classificou este individuo"@pt .
+
+# --- anotacoes lidas pelo codigo (em vez de listas fixas no Python) --------
+:cbrIgnore a owl:AnnotationProperty ; rdfs:label "ignorar na similaridade CBR"@pt ;
+    rdfs:comment "true: a classe descreve um estado inferido, nao a natureza do individuo; nao entra nas facetas da similaridade." .
+:policyResponse a owl:AnnotationProperty ; rdfs:label "resposta da politica"@pt ;
+    rdfs:comment "Acao de resolucao sugerida pela politica para a categoria; herdada pelas subclasses (ingest_real_cases.policy_action)." .
+:residualCategory a owl:AnnotationProperty ; rdfs:label "categoria residual"@pt ;
+    rdfs:comment "true: categoria 'sem categoria propria'. Um individuo pode sair dela quando a evolucao lhe atribui uma categoria." .
+
+:RecurrentlyCriticalAsset :cbrIgnore "true"^^xsd:boolean .
+:OtherWeakness :residualCategory "true"^^xsd:boolean .
+
+#############################################################################
+# ALTERACOES APROVADAS (acrescentadas por ontocsirt_evolve.py apply)
+#############################################################################
+
+# ---------------------------------------------------------------------------
+# EVO-20261103-001 (evo-1) new_class: MemoryBufferBoundsWeakness
+#   proposto por analista (rascunho redigido pelo Claude Code; aguarda revisao); aprovado por Stefano Camargo em 2026-11-03; sinal heterogeneous:MemorySafetyWeakness
+# ---------------------------------------------------------------------------
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix evo: <http://www.semanticweb.org/ontocsirt/evo#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:CWE_125 a :MemoryBufferBoundsWeakness ;
+    evo:classifiedBy "EVO-20261103-001" .
+
+:CWE_416 a :MemoryBufferBoundsWeakness ;
+    evo:classifiedBy "EVO-20261103-001" .
+
+:CWE_787 a :MemoryBufferBoundsWeakness ;
+    evo:classifiedBy "EVO-20261103-001" .
+
+:MemoryBufferBoundsWeakness a owl:Class ;
+    rdfs:label "Memory buffer bounds violation"@en,
+        "Violacao dos limites de buffer de memoria"@pt ;
+    evo:approvedBy "Stefano Camargo" ;
+    evo:approvedOn "2026-11-03"^^xsd:date ;
+    evo:evidence "cwe:CWE-119 - Improper Restriction of Operations within the Bounds of a Memory Buffer (CWE 5.0)",
+        "cwe:CWE-843 - Type Confusion: ChildOf CWE-704, fora do ramo CWE-119",
+        "signal:heterogeneous:MemorySafetyWeakness - 3 de 4 CWEs sob CWE-119" ;
+    evo:proposalId "EVO-20261103-001" ;
+    evo:proposedBy "analista (rascunho redigido pelo Claude Code; aguarda revisao)" ;
+    evo:rationale "Na base real, 3 das 4 CWEs de MemorySafetyWeakness (CVE-2025-5777, CVE-2025-27038, CVE-2025-32709, CVE-2025-27363, CVE-2024-53197) descendem de CWE-119; CWE-843 (confusao de tipos, CVE-2025-6554) pertence ao ramo CWE-704. A subcategoria torna a similaridade do CBR mais fina (Wu-Palmer) sem alterar a politica de resposta, que e herdada (CoA_Patch)." ;
+    evo:signal "heterogeneous:MemorySafetyWeakness" ;
+    rdfs:comment "Fraqueza de seguranca de memoria em que uma operacao le ou escreve fora dos limites do buffer a que tem acesso (ramo oficial CWE-119 da vista de pesquisa 1000)."@pt ;
+    rdfs:subClassOf :MemorySafetyWeakness .
+

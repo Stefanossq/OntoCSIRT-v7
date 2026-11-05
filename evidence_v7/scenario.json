@@ -1,0 +1,115 @@
+{
+  "env": {
+    "python": "3.13.2",
+    "rdflib": "7.6.0",
+    "owlready2": "0.46",
+    "java": "openjdk version \"17.0.13\" 2024-10-15",
+    "ttl": "OntoCSIRT_v7.ttl",
+    "ttl_sha256": "8c2fc5f00faee4bf5a4b8e38a96d8ed2b92da8f28c825f49eda68a80b1720e69"
+  },
+  "pellet_seconds": 2.0,
+  "inferences": {
+    "risk": [
+      [
+        "High"
+      ]
+    ],
+    "classes": [
+      "ConfidentialityAtRisk",
+      "Incident"
+    ],
+    "sharesWeaknessWith": [
+      "Incident_03",
+      "Incident_17",
+      "Incident_24"
+    ],
+    "sharesActorWith": [
+      "Incident_01",
+      "Incident_03",
+      "Incident_04",
+      "Incident_12",
+      "Incident_15",
+      "Incident_19",
+      "Incident_24"
+    ],
+    "candidateSolution": [
+      "CoA_AccessControlFix",
+      "CoA_Isolate",
+      "CoA_WAFRule"
+    ]
+  },
+  "v6_style_join": {
+    "cases": [
+      "Incident_01",
+      "Incident_02",
+      "Incident_03",
+      "Incident_04",
+      "Incident_05",
+      "Incident_06",
+      "Incident_07",
+      "Incident_08",
+      "Incident_11",
+      "Incident_12",
+      "Incident_13",
+      "Incident_14",
+      "Incident_15",
+      "Incident_16",
+      "Incident_17",
+      "Incident_18",
+      "Incident_19",
+      "Incident_22",
+      "Incident_23",
+      "Incident_24"
+    ],
+    "solutions": {
+      "CoA_Patch": 7,
+      "CoA_WAFRule": 5,
+      "CoA_Isolate": 4,
+      "CoA_Segment": 2,
+      "CoA_RotateCredentials": 1,
+      "CoA_AccessControlFix": 1
+    }
+  },
+  "v7_top5": [
+    {
+      "score": 1.0,
+      "incident": "Incident_03",
+      "solution": "CoA_WAFRule"
+    },
+    {
+      "score": 0.84,
+      "incident": "Incident_17",
+      "solution": "CoA_AccessControlFix"
+    },
+    {
+      "score": 0.8,
+      "incident": "Incident_24",
+      "solution": "CoA_Isolate"
+    },
+    {
+      "score": 0.575,
+      "incident": "Incident_09",
+      "solution": "CoA_AccessControlFix"
+    },
+    {
+      "score": 0.39,
+      "incident": "Incident_07",
+      "solution": "CoA_Isolate"
+    }
+  ],
+  "v7_vote_top3": [
+    [
+      "CoA_WAFRule",
+      1
+    ],
+    [
+      "CoA_AccessControlFix",
+      1
+    ],
+    [
+      "CoA_Isolate",
+      1
+    ]
+  ],
+  "policy_expected_solution": "CoA_AccessControlFix"
+}

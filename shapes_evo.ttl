@@ -1,0 +1,44 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix evo: <http://www.semanticweb.org/ontocsirt/evo#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# Meta-restricoes da TBox criada pela evolucao (aplicadas JUNTO com shapes_v7.ttl e shapes_ingest.ttl).
+# Alvo: tudo o que tem evo:proposalId. A TBox original nao e alvo destas formas.
+
+:EvoPrefixes a owl:Ontology ;
+  sh:declare [ sh:prefix "" ; sh:namespace "http://www.semanticweb.org/ontocsirt#"^^xsd:anyURI ] ,
+             [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ,
+             [ sh:prefix "owl" ; sh:namespace "http://www.w3.org/2002/07/owl#"^^xsd:anyURI ] ,
+             [ sh:prefix "evo" ; sh:namespace "http://www.semanticweb.org/ontocsirt/evo#"^^xsd:anyURI ] .
+
+:EvoClassShape a sh:NodeShape ;
+  sh:target [ a sh:SPARQLTarget ; sh:prefixes :EvoPrefixes ;
+              sh:select "SELECT ?this WHERE { ?this a owl:Class ; evo:proposalId ?p }" ] ;
+  sh:property [ sh:path rdfs:label ; sh:minCount 1 ; sh:languageIn ( "pt" "en" ) ;
+                sh:message "Classe nova sem rotulo @pt/@en." ] ;
+  sh:property [ sh:path rdfs:comment ; sh:minCount 1 ; sh:message "Classe nova sem definicao (rdfs:comment)." ] ;
+  sh:property [ sh:path rdfs:subClassOf ; sh:minCount 1 ; sh:message "Classe nova sem superclasse (nao pode ficar solta sob owl:Thing)." ] ;
+  sh:property [ sh:path evo:rationale ; sh:minCount 1 ; sh:message "Classe nova sem justificativa." ] ;
+  sh:property [ sh:path evo:proposedBy ; sh:minCount 1 ; sh:message "Classe nova sem autoria da proposta." ] ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :EvoPrefixes ;
+    sh:message "Conceito duplicado: {$this} tem o mesmo rotulo que a classe {?other}." ;
+    sh:select """SELECT $this ?other WHERE {
+        $this rdfs:label ?l . ?other a owl:Class ; rdfs:label ?l2 . FILTER(isIRI(?other) && ?other != $this)
+        FILTER(LANG(?l) = LANG(?l2))
+        FILTER(LCASE(REPLACE(STR(?l), "[^A-Za-z0-9]", "")) = LCASE(REPLACE(STR(?l2), "[^A-Za-z0-9]", ""))) }""" ] ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :EvoPrefixes ;
+    sh:message "Classe nova sob o nucleo protegido (Incident, Case, ThreatAction, SecurityState): {?core}." ;
+    sh:select """SELECT $this ?core WHERE { $this rdfs:subClassOf ?core .
+        FILTER(?core IN (:Incident, :Case, :ThreatAction, :SecurityState)) }""" ] .
+
+:EvoPropertyShape a sh:NodeShape ;
+  sh:target [ a sh:SPARQLTarget ; sh:prefixes :EvoPrefixes ;
+              sh:select "SELECT ?this WHERE { ?this a owl:ObjectProperty ; evo:proposalId ?p }" ] ;
+  sh:property [ sh:path rdfs:label ; sh:minCount 1 ; sh:message "Propriedade nova sem rotulo." ] ;
+  sh:property [ sh:path rdfs:comment ; sh:minCount 1 ; sh:message "Propriedade nova sem definicao." ] ;
+  sh:property [ sh:path rdfs:domain ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:message "Propriedade nova sem dominio nomeado." ] ;
+  sh:property [ sh:path rdfs:range ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:message "Propriedade nova sem contradominio nomeado." ] ;
+  sh:property [ sh:path evo:rationale ; sh:minCount 1 ; sh:message "Propriedade nova sem justificativa." ] .

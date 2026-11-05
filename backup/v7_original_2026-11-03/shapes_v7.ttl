@@ -1,0 +1,32 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Restricoes de mundo fechado que o OWL (mundo aberto) nao verifica.
+
+:IncidentShape a sh:NodeShape ; sh:targetClass :Incident ;
+  sh:property [ sh:path :hasActor ; sh:minCount 1 ; sh:class :ThreatActor ; sh:message "Incidente sem ator (VERIS A4)." ] ;
+  sh:property [ sh:path :hasAction ; sh:minCount 1 ; sh:class :ThreatAction ; sh:message "Incidente sem acao concreta (VERIS A4)." ] ;
+  sh:property [ sh:path :hasAsset ; sh:minCount 1 ; sh:class :Asset ; sh:message "Incidente sem ativo (VERIS A4)." ] ;
+  sh:property [ sh:path :hasAttribute ; sh:minCount 1 ; sh:class :SecurityState ; sh:message "Incidente sem atributo CIA (VERIS A4)." ] ;
+  sh:property [ sh:path :involvesVulnerability ; sh:minCount 1 ; sh:class :Vulnerability ; sh:message "Incidente sem vulnerabilidade." ] ;
+  sh:property [ sh:path :hasRiskLevel ; sh:in ( "Critical" "High" "Medium" "Low" ) ; sh:maxCount 1 ;
+                sh:message "Nivel de risco fora do vocabulario controlado ou ambiguo." ] .
+
+:ThreatActionShape a sh:NodeShape ; sh:targetClass :ThreatAction ;
+  sh:property [ sh:path :instantiatesPattern ; sh:minCount 1 ; sh:maxCount 1 ; sh:class :AttackPattern ;
+                sh:message "Acao concreta deve instanciar exatamente um padrao de ataque." ] .
+
+:VulnerabilityShape a sh:NodeShape ; sh:targetClass :Vulnerability ;
+  sh:property [ sh:path :cvssBaseScore ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ;
+                sh:minInclusive 0.0 ; sh:maxInclusive 10.0 ; sh:message "CVSS ausente, repetido, nao decimal ou fora de [0,10]." ] ;
+  sh:property [ sh:path :hasWeakness ; sh:minCount 1 ; sh:class :Weakness ; sh:message "Vulnerabilidade sem CWE." ] ;
+  sh:property [ sh:path :cveId ; sh:maxCount 1 ; sh:pattern "^CVE-[0-9]{4}-[0-9]{4,}$" ; sh:message "CVE mal formado." ] ;
+  sh:property [ sh:path :confidentialityImpact ; sh:in ( "HIGH" "LOW" "NONE" ) ; sh:message "Impacto C fora do vocabulario CVSS." ] .
+
+:WeaknessShape a sh:NodeShape ; sh:targetClass :Weakness ;
+  sh:property [ sh:path :cweId ; sh:minCount 1 ; sh:pattern "^CWE-[0-9]+$" ; sh:message "CWE ausente ou mal formado." ] .
+
+:CaseShape a sh:NodeShape ; sh:targetClass :Case ;
+  sh:property [ sh:path :hasProblem ; sh:minCount 1 ; sh:maxCount 1 ; sh:class :Incident ; sh:message "Caso deve ter exatamente um problema." ] ;
+  sh:property [ sh:path :hasSolution ; sh:minCount 1 ; sh:class :ResolutionAction ; sh:message "Caso sem solucao registada." ] .

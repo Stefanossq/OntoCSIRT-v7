@@ -1,0 +1,164 @@
+{
+  "passed": 8,
+  "total": 8,
+  "cqs": [
+    {
+      "id": "CQ1",
+      "question": "Quais incidentes tem risco Critical (inferido pela R1a)?",
+      "sparql": "SELECT ?i WHERE { ?i a :Incident ; :hasRiskLevel ?r . FILTER(STR(?r) = \"Critical\") }",
+      "expected": [
+        "Incident_01",
+        "Incident_02",
+        "Incident_04",
+        "Incident_06",
+        "Incident_08",
+        "Incident_11",
+        "Incident_18",
+        "Incident_21",
+        "Incident_22"
+      ],
+      "got": [
+        "Incident_01",
+        "Incident_02",
+        "Incident_04",
+        "Incident_06",
+        "Incident_08",
+        "Incident_11",
+        "Incident_18",
+        "Incident_21",
+        "Incident_22"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ2",
+      "question": "Quais ativos tem incidentes criticos recorrentes (R3)?",
+      "sparql": "SELECT ?a WHERE { ?a a :RecurrentlyCriticalAsset }",
+      "expected": [
+        "Asset_Gateway_1",
+        "Asset_Server_1",
+        "Asset_Server_2"
+      ],
+      "got": [
+        "Asset_Gateway_1",
+        "Asset_Server_1",
+        "Asset_Server_2"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ3",
+      "question": "Que incidentes partilham a fraqueza do Incident_03 (R5)?",
+      "sparql": "SELECT ?j WHERE { :Incident_03 :sharesWeaknessWith ?j }",
+      "expected": [
+        "Incident_17",
+        "Incident_24"
+      ],
+      "got": [
+        "Incident_17",
+        "Incident_24"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ4",
+      "question": "Que solucoes candidatas a regra R6 propoe para o Incident_03?",
+      "sparql": "SELECT ?s WHERE { :Incident_03 :candidateSolution ?s }",
+      "expected": [
+        "CoA_AccessControlFix",
+        "CoA_Isolate"
+      ],
+      "got": [
+        "CoA_AccessControlFix",
+        "CoA_Isolate"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ5",
+      "question": "Que incidentes com risco a confidencialidade (classe definida) envolvem ator interno?",
+      "sparql": "SELECT ?i WHERE { ?i a :ConfidentialityAtRisk ; :hasActor ?a . ?a a :InternalActor }",
+      "expected": [
+        "Incident_09",
+        "Incident_17",
+        "Incident_21"
+      ],
+      "got": [
+        "Incident_09",
+        "Incident_17",
+        "Incident_21"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ6",
+      "question": "Que incidentes envolvem fraqueza de controle de acesso?",
+      "sparql": "SELECT ?i WHERE { ?i :involvesVulnerability/:hasWeakness ?w . ?w a :AccessControlWeakness }",
+      "expected": [
+        "Incident_03",
+        "Incident_09",
+        "Incident_17",
+        "Incident_20",
+        "Incident_24"
+      ],
+      "got": [
+        "Incident_03",
+        "Incident_09",
+        "Incident_17",
+        "Incident_20",
+        "Incident_24"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ7",
+      "question": "Que incidentes de injecao no servidor afetaram a confidencialidade?",
+      "sparql": "SELECT ?i WHERE { ?i a :ConfidentialityAtRisk ; :involvesVulnerability/:hasWeakness ?w . ?w a :InjectionWeakness }",
+      "expected": [
+        "Incident_01",
+        "Incident_04",
+        "Incident_07",
+        "Incident_22"
+      ],
+      "got": [
+        "Incident_01",
+        "Incident_04",
+        "Incident_07",
+        "Incident_22"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "id": "CQ8",
+      "question": "Que vulnerabilidades com CVE ainda nao foram verificadas contra o NVD?",
+      "sparql": "SELECT ?v WHERE { ?v :cveId ?id ; :verificationNote ?n . FILTER(CONTAINS(?n, \"Pendente\")) }",
+      "expected": [
+        "Vuln_CVE_2020_11022",
+        "Vuln_CVE_2021_26855",
+        "Vuln_CVE_2023_34362"
+      ],
+      "got": [
+        "Vuln_CVE_2020_11022",
+        "Vuln_CVE_2021_26855",
+        "Vuln_CVE_2023_34362"
+      ],
+      "pass": true,
+      "missing": [],
+      "unexpected": []
+    }
+  ]
+}

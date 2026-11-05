@@ -1,0 +1,62 @@
+flowchart TD
+    subgraph F["1. Fontes de dados"]
+        KEV["CISA KEV<br/>CVEs exploradas"]
+        NVD["NVD API 2.0<br/>CVSS e CWE"]
+        ATK["CTID KEV→ATT&CK<br/>e ATT&CK 16.1"]
+        CWE["Catálogo CWE 5.0<br/>hierarquia ChildOf"]
+        SIEM["Alerta SIEM/IDS<br/>POST /alert"]
+    end
+
+    subgraph I["1. Ingestão (ETL)"]
+        ETL["ingest_real_cases.py · ontoevo/enrich.py<br/>nvd_enricher.py (cache 24 h, 5/50 pedidos por 30 s)<br/>proveniência por campo; CVSS nunca do modelo"]
+    end
+
+    subgraph Q["2. Quality Gate"]
+        SH{{"SHACL (mundo fechado)<br/>shapes_v7 + ingest + evo"}}
+        HE{{"HermiT (OWL 2 DL)<br/>consistência e classes insatisfazíveis"}}
+    end
+
+    DATA[("OntoCSIRT_v7_acquired.ttl<br/>dados validados")]
+
+    subgraph R["3. Inferência"]
+        PE["Pellet + 8 regras SWRL<br/>risco R1, recorrência R3, R4–R6"]
+        CBR["CBR: similaridade ponderada<br/>Wu-Palmer sobre a hierarquia"]
+        OUT["Recomendação ao SOAR<br/>ação, playbook, confiança"]
+    end
+
+    subgraph E["4. Evolução neuro-simbólica"]
+        SIG["Sinais estruturais determinísticos<br/>sub-ramo CWE, residual, relação em literal…"]
+        LLM["Gemini: function calling só de leitura<br/>→ JSON validado (ProposalBatch)"]
+        CMP["Compilador OWL<br/>gramática restrita, sem Turtle livre"]
+        EG{{"Portão da evolução: SHACL, HermiT<br/>(insatisfazível, redundância), Pellet, CQ 8/8"}}
+    end
+
+    subgraph H["5. Governança humana"]
+        AP{"Aprovação do analista<br/>approve --by"}
+        APPLY["apply: portão repetido, backup,<br/>evo-N, CHANGELOG, rollback"]
+        RET["POST /retain<br/>caso analyst:retain"]
+    end
+
+    EVO[("OntoCSIRT_v7_evo.ttl<br/>TBox aditiva: evo-1, evo-2")]
+    KG[("Grafo atualizado<br/>OntoCSIRT_v7.ttl congelado + ext + evo + dados")]
+    REJ["Recusado / manual_review<br/>nada é gravado"]
+
+    KEV --> ETL
+    NVD --> ETL
+    ATK --> ETL
+    CWE --> ETL
+    SIEM -->|"CVE ausente da base"| ETL
+    ETL --> SH --> HE
+    HE -->|"conforme e consistente"| DATA
+    SH -.->|"violação"| REJ
+    HE -.->|"inconsistente"| REJ
+    DATA --> KG
+    KG --> PE --> CBR --> OUT
+    SIEM --> PE
+    KG --> SIG --> LLM --> CMP --> EG
+    CWE -.->|"evidência"| LLM
+    EG -->|"pending"| AP
+    EG -.->|"failed-gate"| REJ
+    AP -->|"aprovada"| APPLY --> EVO --> KG
+    AP -.->|"recusada"| REJ
+    OUT --> RET --> DATA

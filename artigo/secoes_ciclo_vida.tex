@@ -1,0 +1,116 @@
+% =============================================================================
+% Secoes do ciclo de vida da OntoCSIRT v7 - texto para o Overleaf.
+%
+% Como integrar em artigo_ontocsirt_v7.tex:
+%   1. No preambulo, logo depois de \input{numbers_v7}:      \input{numbers_lifecycle}
+%   2. Envie para o Overleaf: numbers_lifecycle.tex, tab_lifecycle.tex e refs_v7.bib (5 entradas novas).
+%   3. BLOCO 1 (Metodologia) = nova secao entre "Aplicacao da Ontologia" (sec:app) e
+%      "Avaliacao e Resultados" (sec:res). Atualize o paragrafo de organizacao da Introducao
+%      ("sete secoes" -> "oito secoes"; acrescente a Secao~\ref{sec:ciclo}).
+%   4. BLOCO 2 (Resultados) = nova subsecao em sec:res, antes de "Achados sobre as ferramentas".
+%   5. BLOCO 3 (opcional) = declaracao de uso de IA, antes da bibliografia.
+% Todos os numeros vem de lifecycle_metrics.py (evidence_v7/lifecycle.json); para os regenerar:
+%   python lifecycle_metrics.py --live      (ou --from-evidence para so refazer os .tex)
+% =============================================================================
+
+
+% =============================== BLOCO 1 =====================================
+\section{Ciclo de Vida da Ontologia em Operação}
+\label{sec:ciclo}
+
+As Seções~\ref{sec:dev} e~\ref{sec:app} tratam a ontologia como um artefato fixo, avaliado sobre uma base de 24 casos. Para apoiar um CSIRT, a ontologia precisa receber dados novos continuamente e, quando esses dados deixam de caber na estrutura existente, mudar de estrutura. O ciclo de vida adotado para isso tem cinco fases (Figura~\ref{fig:ciclo}) e segue um princípio: as fontes autorizadas fornecem os fatos; um modelo de linguagem pode propor valores e mudanças, mas não as aplica; os raciocinadores e as restrições SHACL verificam cada mudança; e um analista decide. O arquivo da ontologia avaliado na Seção~\ref{sec:res} (SHA-256 iniciado por \texttt{\vSevenHash}) não é alterado. As mudanças ficam em três módulos separados: uma extensão de ingestão, um módulo de evolução estrutural, que só acrescenta axiomas, e os arquivos de dados.
+
+\begin{figure}[ht]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\footnotesize,
+  box/.style={rectangle,rounded corners,draw=black!70,fill=black!6,text width=2.45cm,minimum height=1.05cm,align=center},
+  gate/.style={box,fill=black!14},
+  arr/.style={-{Stealth[length=2mm]},thick,black!70}]
+ \node[box] (s) {Fontes: KEV, NVD, ATT\&CK, CWE; alertas do SOAR};
+ \node[box,right=0.45cm of s] (i) {1. Ingestão com proveniência por campo};
+ \node[gate,right=0.45cm of i] (g) {2. Portão: SHACL e HermiT};
+ \node[box,right=0.45cm of g] (r) {3. Inferência: Pellet (SWRL) e CBR};
+ \node[box,below=1.2cm of r] (l) {4a. Sinais nos dados; modelo de linguagem propõe (JSON)};
+ \node[gate,left=0.45cm of l] (c) {4b. Compilador OWL e portão da evolução};
+ \node[gate,left=0.45cm of c] (h) {5. Aprovação humana};
+ \node[box,left=0.45cm of h] (k) {Grafo atualizado: módulos de evolução e de dados};
+ \draw[arr] (s)--(i); \draw[arr] (i)--(g); \draw[arr] (g)--(r); \draw[arr] (r)--(l);
+ \draw[arr] (l)--(c); \draw[arr] (c)--(h); \draw[arr] (h)--(k);
+ \draw[arr,dashed] (k.north) -- node[left,font=\scriptsize]{dados e classes novos} (i.south);
+\end{tikzpicture}}
+\caption{Ciclo de vida da ontologia em operação. Os nós mais escuros são verificações que podem recusar a mudança; nesse caso, nada é gravado.}
+\label{fig:ciclo}
+\end{figure}
+
+\subsection{Ingestão}
+
+Os dados entram por três caminhos. O primeiro é uma carga em lote que cruza o catálogo KEV da CISA \cite{cisakev}, de vulnerabilidades com exploração confirmada, o mapeamento desse catálogo para técnicas do ATT\&CK publicado pelo Center for Threat-Informed Defense \cite{ctidkev,strom2018attack} e a API do NVD \cite{nvd}, de onde vêm a pontuação CVSS e os impactos. Cada CVE dá origem a um ramo completo: vulnerabilidade, fraqueza, padrão de ataque, ação, ativo, incidente e caso. O segundo caminho é uma aquisição assistida, em que um modelo de linguagem preenche apenas lacunas das fontes: a CWE, quando o KEV e o NVD não a atribuem; a técnica ATT\&CK, que falta para 1.347 das 1.766 CVEs do catálogo KEV de 30/10/2026; e o tipo de ativo, quando a heurística por produto não decide. Cada valor proposto é conferido nos catálogos oficiais (CWE~5.0 \cite{cwe} e ATT\&CK~16.1), e um valor que não confere faz a CVE ser recusada, em vez de entrar com um dado inventado. O terceiro caminho é o enriquecimento em tempo real: quando um alerta chega ao serviço do SOAR com uma CVE ausente da ontologia, o serviço consulta o NVD, com cache local de 24~h e o limite de pedidos da API pública (5 por 30~s sem chave e 50 com chave). Em todos os caminhos, a pontuação CVSS vem só do NVD, e cada campo registra a sua origem por uma anotação (\oc{cweSource}, \oc{techniqueSource}, \oc{assetTypeSource}).
+
+\subsection{Portão de qualidade}
+\label{sec:portao}
+
+Nenhum dado é gravado antes de o grafo composto (ontologia, extensão, módulo de evolução, dados existentes e dados novos) passar por duas verificações de natureza diferente. A validação SHACL \cite{shacl}, de mundo fechado, aplica as restrições da Seção~\ref{sec:res}, as da ingestão (CVE e atores duplicados, identificadores ATT\&CK mal formados, proveniência dos casos) e as da evolução (rótulo, definição, superclasse e proveniência de cada classe nova, conceitos duplicados e proibição de subclasses no núcleo \oc{Incident}, \oc{Case}, \oc{ThreatAction} e \oc{SecurityState}). O HermiT \cite{hermit} verifica a consistência em OWL~2~DL e procura classes insatisfazíveis: uma classe impossível não torna a ontologia inconsistente enquanto não tem membros, mas indica um erro de modelagem. O Pellet acrescenta a verificação com as regras SWRL. O portão encontrou um defeito na própria extensão de ingestão: a data de inclusão no KEV era uma propriedade de dados com contradomínio \texttt{xsd:date}, que não pertence ao mapa de tipos do OWL~2 \cite{owl2}; o HermiT recusava o arquivo, e a propriedade passou a ser de anotação, por uma migração documentada.
+
+\subsection{Inferência}
+
+A inferência mantém o processamento da Seção~\ref{sec:app}: o Pellet aplica as oito regras SWRL e classifica as classes definidas, e a recuperação ordena os casos pela Equação~(1). Para que a Equação~(1) acompanhe uma hierarquia que pode ganhar níveis, o crédito parcial por categoria passou a ser a similaridade de Wu-Palmer \cite{wupalmer1994} na árvore da faceta, lida do próprio grafo:
+\begin{equation}
+wp(a,b) = \frac{2\,p(\mathrm{lcs}(a,b))}{p(a)+p(b)},
+\end{equation}
+onde $p$ é a profundidade a partir da raiz da faceta (\oc{Weakness}, \oc{Asset} ou \oc{ThreatActor}), com $p=0$ na raiz e $wp=0$ quando o antepassado comum mais específico é a raiz. Assim, $s_W = 1$ para a mesma CWE e $0{,}5\,wp$ entre categorias, e o mesmo vale para o ativo ($0{,}7\,wp$), para o ator ($0{,}5\,wp$) e para o padrão de ataque ($0{,}5\,wp$, nulo enquanto os padrões não tiverem subclasses). Na hierarquia de dois níveis usada na Seção~\ref{sec:res}, $wp$ vale 1 para a mesma categoria e 0 para categorias diferentes, e a Equação~(1) não muda: a avaliação \emph{leave-one-out} foi repetida e coincidiu consulta a consulta. Em operação, cada alerta do SOAR é inserido como incidente, raciocinado com o Pellet e comparado com os casos; a resposta traz a ação recomendada, o nível de risco inferido e uma confiança que, abaixo de 0,5, pede aprovação humana.
+
+\subsection{Evolução neuro-simbólica}
+
+A estrutura muda a partir de sinais detectados de forma determinística nos dados:
+\begin{itemize}
+\item uma categoria de fraqueza cujos membros se repartem por ramos distintos da hierarquia oficial da CWE (relação \emph{ChildOf} da vista~1000);
+\item uma categoria residual que acumula membros;
+\item ativos cujo tipo foi atribuído por omissão;
+\item identificadores de indivíduos guardados como texto;
+\item um padrão de ataque cujos casos convergem para a mesma solução;
+\item padrões ATT\&CK sem classes por tática.
+\end{itemize}
+Cada sinal é entregue a um modelo de linguagem que consulta a ontologia e os catálogos por oito funções somente de leitura (\emph{function calling}) e responde com no máximo três propostas num esquema JSON validado localmente (saída estruturada) \cite{geminiapi}. O modelo não escreve OWL: um compilador determinístico traduz cada proposta numa gramática restrita (classe nova sob uma superclasse existente, propriedade de objeto com domínio e contradomínio nomeados, classificação de indivíduos e classes definidas da forma $P \sqcap \exists r.C$ ou $P \sqcap \exists r.\{i\}$) e rejeita o que viola regras estruturais, como colocar um indivíduo em dois ramos de uma partição disjunta. O resultado passa por um portão próprio: as verificações da Seção~\ref{sec:portao} sobre o grafo candidato; a classificação pelo HermiT, que recusa uma classe nova inferida como equivalente a uma classe existente, por não acrescentar conceito; o Pellet com as regras; e as oito questões de competência da Tabela~\ref{tab:cq}, como teste de regressão. A combinação segue a direção indicada por trabalhos que usam SHACL para validar grafos extraídos por modelos de linguagem \cite{cotti2026ontologx} e pela necessidade de conter alucinações em respostas a incidentes \cite{hammar2026}: o componente neural propõe, e o simbólico verifica.
+
+\subsection{Governança humana}
+
+Uma proposta que passa no portão fica pendente até que um analista a aprove; a aprovação registra o nome de quem aprovou. A aplicação repete a compilação e o portão sobre a base atual, que pode ter mudado desde a aprovação, guarda uma cópia de segurança, acrescenta um bloco ao módulo de evolução com a proveniência de cada axioma (identificador da proposta, autor, aprovador, data, justificativa e evidência), incrementa a versão do módulo (\texttt{evo-$N$}) e verifica de novo o conjunto; se a verificação final falhar, as cópias são restauradas. A evolução é monótona: só acrescenta axiomas, e a única retração permitida é tirar um indivíduo da categoria residual ou de um tipo de ativo atribuído por omissão, e apenas nos arquivos de dados. O mesmo controle vale para o ciclo do CBR: a ação aprovada por um analista para um alerta real é retida como caso com proveniência própria. Quando um incidente tem mais de um caso, a solução retida prevalece sobre os rótulos derivados de política, que por sua vez prevalecem sobre as hipóteses do modelo de linguagem.
+% ============================= fim do BLOCO 1 ================================
+
+
+% =============================== BLOCO 2 =====================================
+\subsection{Ingestão real, evolução e enriquecimento em tempo real}
+\label{sec:res-ciclo}
+
+A Tabela~\ref{tab:ciclo} compara três configurações. A \emph{base} é a ontologia avaliada nas subseções anteriores. A \emph{ingestão real} é a base gerada pela carga em lote a partir do KEV, acrescida das CVEs adquiridas e do módulo de evolução na versão \lcEvoVersion{}. Nela, os 18 casos sintéticos foram retirados, e os 6 casos herdados com CVE real foram mantidos. O \emph{tempo real} é a ingestão real depois de um alerta do SOAR com a \lcCve{}, que não constava da ontologia. Nas três configurações, o HermiT considerou a ontologia consistente e sem classes insatisfazíveis, o Pellet a considerou consistente e a validação SHACL não apontou violações. As oito questões de competência continuaram corretas na base acrescida da extensão e do módulo de evolução (\lcRegressionCq{}).
+
+\begin{table}[ht]
+\centering\small
+\caption{Ontologia base, após a ingestão real e após um alerta com enriquecimento em tempo real. Na base, o SHACL usa as restrições da Seção~\ref{sec:res}; nas outras colunas, também as de ingestão e de evolução. Tempos de uma única execução, incluindo o arranque da máquina virtual Java.}
+\label{tab:ciclo}
+\input{tab_lifecycle}
+\end{table}
+
+As classes passaram de \lcBaseClasses{} para \lcRealClasses{}. Três vêm da extensão de ingestão: o ator desconhecido do VERIS e as categorias de fraqueza de segurança de memória e residual. Duas vêm do módulo de evolução, em versões aprovadas pelo autor e aplicadas pelo processo da Seção~\ref{sec:ciclo}:
+\begin{itemize}
+\item \texttt{evo-1}: \oc{MemoryBufferBoundsWeakness}, subclasse de \oc{MemorySafetyWeakness}, com as CWE-787, CWE-125 e CWE-416, que descendem do ramo oficial CWE-119; a CWE-843, de confusão de tipos, pertence ao ramo CWE-704 e ficou na categoria-mãe;
+\item \texttt{evo-2}: \oc{CommandInjectionWeakness}, subclasse de \oc{InjectionWeakness}, com as CWE-77 e CWE-78, do ramo oficial CWE-77.
+\end{itemize}
+Com elas, a profundidade máxima da hierarquia passou de \lcBaseDepth{} para \lcRealDepth{} níveis. As duas propostas partiram de sinais de categoria heterogênea detectados nos dados, mas foram redigidas pelo autor, e não pelo modelo de linguagem, e seguiram o mesmo caminho de compilação, portão e aprovação. Nas duas, a acurácia no primeiro colocado na base da Seção~\ref{sec:res} foi a mesma antes e depois (\lcBaseAcc{}), o que era esperado, porque os casos da base não distinguem os sub-ramos.
+
+No alerta com a \lcCve{}, a consulta ao NVD (\lcNvdMode{}) levou \lcNvdSec{}~s. O ramo criado tem \lcEnrichTriples{} triplas, com CVSS \lcCvss{} e a \lcCwe{}, que entrou diretamente na subcategoria \oc{\lcCategory}, criada pela \texttt{evo-2}, sem alteração de código. A validação do ramo e a gravação levaram \lcEnrichSec{}~s. O Pellet inferiu o nível de risco \emph{\lcRisk} pela regra R1a, e a recuperação recomendou \oc{\lcAction}, com confiança \lcConfidence{}. Por estar abaixo de 0,5, a resposta pediu aprovação humana. O alerta completo levou \lcAlertOneSec{}~s; um segundo alerta com a mesma CVE, já presente na ontologia, levou \lcAlertTwoSec{}~s, sem consulta ao NVD. Quando o NVD não está acessível, a CVE não existe ou o seu registro não tem CVSS, o serviço não grava nada e responde com um pedido de revisão manual que indica o motivo. Esses casos, a cache e o limite de pedidos foram verificados com testes automatizados que simulam a rede, e não com uma indisponibilidade real do NVD.
+
+Estes resultados têm quatro limites:
+\begin{itemize}
+\item o caminho do modelo de linguagem (aquisição assistida, análise de casos e proposta de evolução) foi implementado e testado com respostas simuladas, mas não foi executado contra a API; assim, não há ainda uma medida da qualidade das propostas do modelo;
+\item o enriquecimento em tempo real foi medido com uma única CVE, numa única execução;
+\item a acurácia da recuperação não foi medida na ingestão real, porque ali a solução de cada caso é derivada da categoria da CWE, que também entra na similaridade, e a avaliação seria circular;
+\item as duas mudanças estruturais foram aprovadas pelo próprio autor, sem revisão por especialistas.
+\end{itemize}
+% ============================= fim do BLOCO 2 ================================
+
+
+% =========================== BLOCO 3 (opcional) ==============================
+\paragraph{Uso de ferramentas de IA.} Um assistente de programação baseado em modelo de linguagem foi usado no desenvolvimento do código de ingestão, de validação, de evolução e do serviço do SOAR, e na redação das propostas \texttt{evo-1} e \texttt{evo-2}, que foram revistas e aprovadas pelo autor. A integração com a API Gemini descrita na Seção~\ref{sec:ciclo} faz parte do sistema e não foi usada para produzir resultados deste artigo. Todos os números citados foram gerados pelos programas que acompanham o trabalho.
+% ========================= fim do BLOCO 3 ====================================

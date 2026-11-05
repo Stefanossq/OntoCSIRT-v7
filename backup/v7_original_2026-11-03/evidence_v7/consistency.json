@@ -1,0 +1,32 @@
+{
+  "env": {
+    "python": "3.13.2",
+    "rdflib": "7.6.0",
+    "owlready2": "0.46",
+    "java": "openjdk version \"17.0.13\" 2024-10-15",
+    "ttl": "OntoCSIRT_v7.ttl",
+    "ttl_sha256": "8c2fc5f00faee4bf5a4b8e38a96d8ed2b92da8f28c825f49eda68a80b1720e69"
+  },
+  "metrics": {
+    "triples": 1323,
+    "classes": 28,
+    "object_properties": 17,
+    "data_properties": 6,
+    "annotation_properties": 7,
+    "individuals": 139,
+    "incidents": 24,
+    "cases": 24,
+    "swrl_rules": 8,
+    "disjoint_axioms": 4,
+    "defined_classes": 2
+  },
+  "hermit_consistent": true,
+  "hermit_seconds": 0.85,
+  "hermit_unsatisfiable_classes": [],
+  "pellet_consistent": true,
+  "pellet_seconds": 1.81,
+  "pellet_inferred_triples": 217,
+  "shacl_conforms": true,
+  "shacl_violations": 0,
+  "shacl_messages": []
+}

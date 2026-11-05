@@ -1,0 +1,31 @@
+# segredos (copie .env.example para .env)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# estado de execucao (nao e evidencia): cache do NVD em tempo real (24 h), respostas do Gemini, bases compostas
+cache/nvd_*.json
+cache/gemini/
+OntoCSIRT_v7_composed_*.ttl
+ontology/OntoBugBounty_data.ttl
+
+# copias de seguranca deixadas por execucoes de teste (as das versoes evo-1/evo-2 e m002 ficam: o
+# CHANGELOG e as propostas apontam para elas)
+evolution/backups/a.ttl.*
+evolution/backups/acquired.ttl.*
+
+# copias identicas dos ficheiros do artigo (a fonte e artigo/)
+ontology/*.tex
+ontology/*.bib
+ontology/*.sty
+
+# sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

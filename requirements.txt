@@ -1,0 +1,15 @@
+# OntoCSIRT v7 - dependencias (Java 8+ tambem e necessario para Pellet/HermiT via Owlready2)
+rdflib>=7.0
+# fixado: a 0.46 e a versao das evidencias e dos testes e corre no Java 8-17; a 0.51 traz o Pellet/Jena
+# compilado para o Java 25 (class file 69) e falha no Java 17 com UnsupportedClassVersionError
+owlready2==0.46
+pyshacl>=0.26
+requests>=2.31
+pydantic>=2.6
+# Integracao Gemini (aquisicao e evolucao da ontologia); so e importado quando usado
+google-genai>=2.34
+# testes (o de contrato valida openapi.yaml e as respostas reais do webhook)
+pytest>=8
+pyyaml>=6
+jsonschema>=4.18
+openapi-spec-validator>=0.7

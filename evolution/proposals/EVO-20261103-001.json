@@ -1,0 +1,219 @@
+{
+ "id": "EVO-20261103-001",
+ "created": "2026-11-03T03:11:52",
+ "proposed_by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+ "signal": "heterogeneous:MemorySafetyWeakness",
+ "llm": null,
+ "proposal": {
+  "kind": "new_class",
+  "signal_id": "heterogeneous:MemorySafetyWeakness",
+  "rationale": "Na base real, 3 das 4 CWEs de MemorySafetyWeakness (CVE-2025-5777, CVE-2025-27038, CVE-2025-32709, CVE-2025-27363, CVE-2024-53197) descendem de CWE-119; CWE-843 (confusao de tipos, CVE-2025-6554) pertence ao ramo CWE-704. A subcategoria torna a similaridade do CBR mais fina (Wu-Palmer) sem alterar a politica de resposta, que e herdada (CoA_Patch).",
+  "evidence": [
+   {
+    "source": "cwe",
+    "ref": "CWE-119",
+    "note": "Improper Restriction of Operations within the Bounds of a Memory Buffer (CWE 5.0)"
+   },
+   {
+    "source": "cwe",
+    "ref": "CWE-843",
+    "note": "Type Confusion: ChildOf CWE-704, fora do ramo CWE-119"
+   },
+   {
+    "source": "signal",
+    "ref": "heterogeneous:MemorySafetyWeakness",
+    "note": "3 de 4 CWEs sob CWE-119"
+   }
+  ],
+  "confidence": 0.8,
+  "class_name": "MemoryBufferBoundsWeakness",
+  "parent": "MemorySafetyWeakness",
+  "label_pt": "Violacao dos limites de buffer de memoria",
+  "label_en": "Memory buffer bounds violation",
+  "definition": "Fraqueza de seguranca de memoria em que uma operacao le ou escreve fora dos limites do buffer a que tem acesso (ramo oficial CWE-119 da vista de pesquisa 1000).",
+  "disjoint_with_siblings": false,
+  "defined_by": null,
+  "members": [
+   {
+    "individual": "CWE_787",
+    "justification": "CWE-787 Out-of-bounds Write: ChildOf CWE-119"
+   },
+   {
+    "individual": "CWE_125",
+    "justification": "CWE-125 Out-of-bounds Read: ChildOf CWE-119"
+   },
+   {
+    "individual": "CWE_416",
+    "justification": "CWE-416 Use After Free: ChildOf CWE-825, ChildOf CWE-119"
+   }
+  ],
+  "policy_response": null,
+  "property_name": null,
+  "domain": null,
+  "range": null,
+  "inverse_name": null,
+  "characteristics": null,
+  "assertions": null
+ },
+ "compiled": {
+  "proposal_id": "EVO-20261103-001",
+  "kind": "new_class",
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "new_classes": [
+   "MemoryBufferBoundsWeakness"
+  ],
+  "new_properties": [],
+  "members": [
+   "CWE_787",
+   "CWE_125",
+   "CWE_416"
+  ],
+  "triples_added": 18,
+  "retractions": []
+ },
+ "turtle": "@prefix : <http://www.semanticweb.org/ontocsirt#> .\n@prefix evo: <http://www.semanticweb.org/ontocsirt/evo#> .\n@prefix owl: <http://www.w3.org/2002/07/owl#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\n:CWE_125 a :MemoryBufferBoundsWeakness ;\n    evo:classifiedBy \"EVO-20261103-001\" .\n\n:CWE_416 a :MemoryBufferBoundsWeakness ;\n    evo:classifiedBy \"EVO-20261103-001\" .\n\n:CWE_787 a :MemoryBufferBoundsWeakness ;\n    evo:classifiedBy \"EVO-20261103-001\" .\n\n:MemoryBufferBoundsWeakness a owl:Class ;\n    rdfs:label \"Memory buffer bounds violation\"@en,\n        \"Violacao dos limites de buffer de memoria\"@pt ;\n    evo:evidence \"cwe:CWE-119 - Improper Restriction of Operations within the Bounds of a Memory Buffer (CWE 5.0)\",\n        \"cwe:CWE-843 - Type Confusion: ChildOf CWE-704, fora do ramo CWE-119\",\n        \"signal:heterogeneous:MemorySafetyWeakness - 3 de 4 CWEs sob CWE-119\" ;\n    evo:proposalId \"EVO-20261103-001\" ;\n    evo:proposedBy \"analista (rascunho redigido pelo Claude Code; aguarda revisao)\" ;\n    evo:rationale \"Na base real, 3 das 4 CWEs de MemorySafetyWeakness (CVE-2025-5777, CVE-2025-27038, CVE-2025-32709, CVE-2025-27363, CVE-2024-53197) descendem de CWE-119; CWE-843 (confusao de tipos, CVE-2025-6554) pertence ao ramo CWE-704. A subcategoria torna a similaridade do CBR mais fina (Wu-Palmer) sem alterar a politica de resposta, que e herdada (CoA_Patch).\" ;\n    evo:signal \"heterogeneous:MemorySafetyWeakness\" ;\n    rdfs:comment \"Fraqueza de seguranca de memoria em que uma operacao le ou escreve fora dos limites do buffer a que tem acesso (ramo oficial CWE-119 da vista de pesquisa 1000).\"@pt ;\n    rdfs:subClassOf :MemorySafetyWeakness .\n\n",
+ "gate": {
+  "passed": true,
+  "checks": [
+   {
+    "name": "compilacao",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "sintaxe Turtle",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "SHACL (v7 + ingestao + evo)",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: consistencia",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: classes insatisfaziveis",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "Pellet + SWRL: consistencia",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "HermiT: sem redundancia (equivalencia inferida)",
+    "ok": true,
+    "blocking": true,
+    "detail": null
+   },
+   {
+    "name": "regressao: questoes de competencia do artigo",
+    "ok": true,
+    "blocking": true,
+    "detail": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   {
+    "name": "LOOCV Acc@1 na base do artigo (informativo)",
+    "ok": true,
+    "blocking": false,
+    "detail": {
+     "base_acc1_before": 0.688,
+     "base_acc1_after": 0.688
+    }
+   }
+  ],
+  "seconds": 10.53,
+  "classification": {
+   "consistent": true,
+   "classes": {
+    "MemoryBufferBoundsWeakness": {
+     "equivalent_named": [],
+     "inferred_parents": [
+      "MemorySafetyWeakness"
+     ],
+     "inferred_members": [
+      "CWE_125",
+      "CWE_416",
+      "CWE_787"
+     ]
+    }
+   },
+   "seconds": 1.2
+  },
+  "loocv": {
+   "base_acc1_before": 0.688,
+   "base_acc1_after": 0.688
+  },
+  "hermit": {
+   "seconds": 1.04
+  },
+  "pellet": {
+   "seconds": 1.73
+  }
+ },
+ "status": "applied",
+ "history": [
+  {
+   "at": "2026-11-03T03:12:03",
+   "action": "created",
+   "by": "analista (rascunho redigido pelo Claude Code; aguarda revisao)",
+   "note": "pending"
+  },
+  {
+   "at": "2026-11-03T23:59:16",
+   "action": "approved",
+   "by": "Stefano Camargo",
+   "note": "aprovado no chat: 'Approve both'"
+  },
+  {
+   "at": "2026-11-03T23:59:37",
+   "action": "applied",
+   "by": "Stefano Camargo",
+   "note": "evo-1"
+  }
+ ],
+ "approved_by": "Stefano Camargo",
+ "approved_on": "2026-11-03",
+ "applied_on": "2026-11-03T23:59:37",
+ "applied": {
+  "evo_version": "evo-1",
+  "triples_added": 20,
+  "retractions": {},
+  "backups": {
+   "OntoCSIRT_v7_evo.ttl": "evolution/backups/OntoCSIRT_v7_evo.ttl.20261103-235930.EVO-20261103-001"
+  },
+  "verification": {
+   "ok": true,
+   "shacl_conforms": true,
+   "violations": [],
+   "hermit": {
+    "consistent": true,
+    "seconds": 1.15,
+    "unsatisfiable_classes": []
+   },
+   "pellet": {
+    "consistent": true,
+    "seconds": 2.01,
+    "inferred_triples": 1764
+   },
+   "competency": "8/8"
+  }
+ }
+}

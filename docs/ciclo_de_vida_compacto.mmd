@@ -1,0 +1,11 @@
+flowchart LR
+    S["Fontes<br/>KEV · NVD · ATT&CK"] --> E["ETL<br/>proveniência"]
+    E --> G{{"Portão<br/>SHACL + HermiT"}}
+    G --> R["CBR + Pellet<br/>risco e recomendação"]
+    R --> L["LLM<br/>proposta em JSON"]
+    L --> C["Compilador<br/>OWL"]
+    C --> H{"Aprovação<br/>humana"}
+    H --> K[("Grafo<br/>atualizado")]
+    K -.->|"novos dados e sinais"| R
+    G -.->|"recusa"| X["nada é gravado"]
+    H -.->|"recusa"| X

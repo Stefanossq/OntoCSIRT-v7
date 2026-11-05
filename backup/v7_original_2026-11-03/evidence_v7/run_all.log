@@ -1,0 +1,179 @@
+* Owlready2 * Warning: optimized Cython parser module 'owlready2_optimized' is not available, defaulting to slower Python implementation
+{
+ "metrics": {
+  "triples": 1323,
+  "classes": 28,
+  "object_properties": 17,
+  "data_properties": 6,
+  "annotation_properties": 7,
+  "individuals": 139,
+  "incidents": 24,
+  "cases": 24,
+  "swrl_rules": 8,
+  "disjoint_axioms": 4,
+  "defined_classes": 2
+ },
+ "hermit_consistent": true,
+ "hermit_seconds": 1.36,
+ "hermit_unsatisfiable_classes": [],
+ "pellet_consistent": true,
+ "pellet_seconds": 3.35,
+ "pellet_inferred_triples": 216,
+ "shacl_conforms": true,
+ "shacl_violations": 0,
+ "shacl_messages": []
+}
+{
+ "pellet_seconds": 3.35,
+ "inferences": {
+  "risk": [
+   [
+    "High"
+   ]
+  ],
+  "classes": [
+   "ConfidentialityAtRisk",
+   "Incident"
+  ],
+  "sharesWeaknessWith": [
+   "Incident_03",
+   "Incident_17",
+   "Incident_24"
+  ],
+  "sharesActorWith": [
+   "Incident_01",
+   "Incident_03",
+   "Incident_04",
+   "Incident_12",
+   "Incident_15",
+   "Incident_19",
+   "Incident_24"
+  ],
+  "candidateSolution": [
+   "CoA_AccessControlFix",
+   "CoA_Isolate",
+   "CoA_WAFRule"
+  ]
+ },
+ "v6_style_join": {
+  "cases": [
+   "Incident_01",
+   "Incident_02",
+   "Incident_03",
+   "Incident_04",
+   "Incident_05",
+   "Incident_06",
+   "Incident_07",
+   "Incident_08",
+   "Incident_11",
+   "Incident_12",
+   "Incident_13",
+   "Incident_14",
+   "Incident_15",
+   "Incident_16",
+   "Incident_17",
+   "Incident_18",
+   "Incident_19",
+   "Incident_22",
+   "Incident_23",
+   "Incident_24"
+  ],
+  "solutions": {
+   "CoA_Patch": 7,
+   "CoA_WAFRule": 5,
+   "CoA_Isolate": 4,
+   "CoA_Segment": 2,
+   "CoA_RotateCredentials": 1,
+   "CoA_AccessControlFix": 1
+  }
+ },
+ "v7_top5": [
+  {
+   "score": 1.0,
+   "incident": "Incident_03",
+   "solution": "CoA_WAFRule"
+  },
+  {
+   "score": 0.84,
+   "incident": "Incident_17",
+   "solution": "CoA_AccessControlFix"
+  },
+  {
+   "score": 0.8,
+   "incident": "Incident_24",
+   "solution": "CoA_Isolate"
+  },
+  {
+   "score": 0.575,
+   "incident": "Incident_09",
+   "solution": "CoA_AccessControlFix"
+  },
+  {
+   "score": 0.39,
+   "incident": "Incident_07",
+   "solution": "CoA_Isolate"
+  }
+ ],
+ "v7_vote_top3": [
+  [
+   "CoA_WAFRule",
+   1
+  ],
+  [
+   "CoA_AccessControlFix",
+   1
+  ],
+  [
+   "CoA_Isolate",
+   1
+  ]
+ ],
+ "policy_expected_solution": "CoA_AccessControlFix"
+}
+CQ1 PASSOU  esperado=9 obtido=9
+CQ2 PASSOU  esperado=3 obtido=3
+CQ3 PASSOU  esperado=2 obtido=2
+CQ4 PASSOU  esperado=2 obtido=2
+CQ5 PASSOU  esperado=3 obtido=3
+CQ6 PASSOU  esperado=5 obtido=5
+CQ7 PASSOU  esperado=4 obtido=4
+CQ8 PASSOU  esperado=3 obtido=3
+R1  PASSOU CVSS 10.0 -> Critical
+R1  PASSOU CVSS 9.0 -> Critical
+R1  PASSOU CVSS 8.9 -> High
+R1  PASSOU CVSS 7.0 -> High
+R1  PASSOU CVSS 6.9 -> Medium
+R1  PASSOU CVSS 4.0 -> Medium
+R1  PASSOU CVSS 3.9 -> Low
+R1  PASSOU CVSS 0.1 -> Low
+R3  PASSOU dois incidentes criticos distintos no mesmo ativo -> RecurrentlyCriticalAsset
+R3  PASSOU um critico + um medio no mesmo ativo -> nao recorrente
+R4  PASSOU mesmo ator concreto -> sharesActorWith
+R4  PASSOU atores distintos da mesma categoria VERIS -> sem sharesActorWith
+R4  PASSOU simetria declarada em OWL
+R5  PASSOU mesma CWE -> sharesWeaknessWith
+R5  PASSOU CWE diferentes -> sem sharesWeaknessWith
+R5  PASSOU incidente nao partilha fraqueza consigo proprio
+R6  PASSOU fraqueza partilhada com problema de caso -> candidateSolution
+R6  PASSOU sem fraqueza partilhada -> sem candidateSolution
+DL  PASSOU risco Critical inferido -> CriticalRiskIncident (classe definida)
+DL  PASSOU risco Medium -> nao CriticalRiskIncident
+M1   DETETADO  owl=True shacl=False  Vulnerabilidade tipada tambem como padrao de ataque (disjuncao)
+M2   DETETADO  owl=True shacl=False  Ator externo e interno ao mesmo tempo (disjuncao VERIS)
+M3   DETETADO  owl=True shacl=False  Ativo servidor e base de dados ao mesmo tempo
+M4   DETETADO  owl=False shacl=True  Segundo CVSS para a mesma vulnerabilidade (propriedade funcional)
+M5   DETETADO  owl=True shacl=True  CVSS como texto em vez de decimal
+M6   DETETADO  owl=False shacl=True  Incidente sem ator (VERIS A4 incompleto)
+M7   DETETADO  owl=False shacl=True  Caso sem solucao registada
+M8   DETETADO  owl=False shacl=True  Nivel de risco fora do vocabulario
+M9   DETETADO  owl=False shacl=True  CVSS fora do intervalo [0,10]
+M10  DETETADO  owl=False shacl=True  Identificador CVE mal formado
+majority  acc@1=0.292 p@3=0.292 cobertura=1.00
+v6_join   acc@1=0.250 p@3=0.243 cobertura=1.00
+actor     acc@1=0.244 p@3=0.231 cobertura=1.00
+rule_R6   acc@1=0.500 p@3=0.222 cobertura=0.79
+v7_eq     acc@1=0.625 p@3=0.451 cobertura=1.00
+v7        acc@1=0.688 p@3=0.486 cobertura=1.00
+ablacao (acc@1 sem o componente): {'weakness': 0.493, 'pattern': 0.521, 'asset': 0.675, 'attribute': 0.667, 'actor': 0.681}
+
+[ok] evidence_v7/*.json, artigo/numbers_v7.tex, artigo/tab_scenario.tex

@@ -1,0 +1,472 @@
+{
+ "catalog": {
+  "source": "catalog",
+  "summary": {
+   "vrt_release": "2026-07-08T00:00:00+00:00",
+   "cwe_version": "5.0",
+   "kev": "2026.10.30",
+   "patterns": {
+    "AP_IDOR": {
+     "cves": [
+      [
+       "CVE-2026-55255",
+       8.4,
+       "CWE-639"
+      ],
+      [
+       "CVE-2026-100268",
+       2.7,
+       "CWE-639"
+      ]
+     ],
+     "mean_cvss": 5.55,
+     "severity": "Medium",
+     "vrt": {
+      "priorities": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "best": 1,
+      "typical": 3,
+      "tier": "$$"
+     },
+     "owasp": [
+      "OWASP_2021_A01",
+      "OWASP_2025_A01"
+     ]
+    },
+    "AP_XSS": {
+     "cves": [
+      [
+       "CVE-2026-42897",
+       6.1,
+       "CWE-79"
+      ],
+      [
+       "CVE-2025-48700",
+       6.1,
+       "CWE-79"
+      ],
+      [
+       "CVE-2025-68461",
+       6.1,
+       "CWE-79"
+      ]
+     ],
+     "mean_cvss": 6.1,
+     "severity": "Medium",
+     "vrt": {
+      "priorities": [
+       2,
+       3,
+       3,
+       3,
+       4,
+       5,
+       5
+      ],
+      "best": 2,
+      "typical": 3,
+      "tier": "$$"
+     },
+     "owasp": [
+      "OWASP_2021_A03",
+      "OWASP_2025_A05"
+     ]
+    },
+    "AP_SQLInjection": {
+     "cves": [
+      [
+       "CVE-2026-114625",
+       9.9,
+       "CWE-89"
+      ],
+      [
+       "CVE-2026-76461",
+       9.8,
+       "CWE-89"
+      ],
+      [
+       "CVE-2026-9586",
+       9.8,
+       "CWE-89"
+      ]
+     ],
+     "mean_cvss": 9.83,
+     "severity": "Critical",
+     "vrt": {
+      "priorities": [
+       1
+      ],
+      "best": 1,
+      "typical": 1,
+      "tier": "$$$"
+     },
+     "owasp": [
+      "OWASP_2021_A03",
+      "OWASP_2025_A05"
+     ]
+    },
+    "AP_SSRF": {
+     "cves": [
+      [
+       "CVE-2026-96655",
+       4.3,
+       "CWE-918"
+      ],
+      [
+       "CVE-2026-49869",
+       10.0,
+       "CWE-918"
+      ],
+      [
+       "CVE-2026-83548",
+       10.0,
+       "CWE-918"
+      ]
+     ],
+     "mean_cvss": 8.1,
+     "severity": "High",
+     "vrt": {
+      "priorities": [
+       2,
+       3,
+       3,
+       4,
+       4,
+       5,
+       5
+      ],
+      "best": 2,
+      "typical": 4,
+      "tier": "$"
+     },
+     "owasp": [
+      "OWASP_2021_A10",
+      "OWASP_2025_A01"
+     ]
+    },
+    "AP_CommandInjection": {
+     "cves": [
+      [
+       "CVE-2026-110447",
+       9.8,
+       "CWE-78"
+      ],
+      [
+       "CVE-2026-106931",
+       7.8,
+       "CWE-78"
+      ],
+      [
+       "CVE-2026-105134",
+       10.0,
+       "CWE-78"
+      ]
+     ],
+     "mean_cvss": 9.2,
+     "severity": "Critical",
+     "vrt": {
+      "priorities": [
+       1,
+       1
+      ],
+      "best": 1,
+      "typical": 1,
+      "tier": "$$$"
+     },
+     "owasp": [
+      "OWASP_2021_A03",
+      "OWASP_2021_A03",
+      "OWASP_2025_A05",
+      "OWASP_2025_A05"
+     ]
+    },
+    "AP_Deserialization": {
+     "cves": [
+      [
+       "CVE-2021-23758",
+       9.8,
+       "CWE-502"
+      ],
+      [
+       "CVE-2026-63077",
+       9.8,
+       "CWE-502"
+      ],
+      [
+       "CVE-2026-50522",
+       9.8,
+       "CWE-502"
+      ]
+     ],
+     "mean_cvss": 9.8,
+     "severity": "Critical",
+     "vrt": {
+      "priorities": [
+       1
+      ],
+      "best": 1,
+      "typical": 1,
+      "tier": "$$$"
+     },
+     "owasp": [
+      "OWASP_2021_A08",
+      "OWASP_2025_A08"
+     ]
+    },
+    "AP_CSRF": {
+     "cves": [
+      [
+       "CVE-2025-62593",
+       8.8,
+       "CWE-352"
+      ],
+      [
+       "CVE-2008-4128",
+       8.1,
+       "CWE-352"
+      ],
+      [
+       "CVE-2023-2533",
+       8.8,
+       "CWE-352"
+      ]
+     ],
+     "mean_cvss": 8.57,
+     "severity": "High",
+     "vrt": {
+      "priorities": [
+       2,
+       5,
+       5,
+       5
+      ],
+      "best": 2,
+      "typical": 5,
+      "tier": "$"
+     },
+     "owasp": [
+      "OWASP_2021_A01",
+      "OWASP_2025_A01"
+     ]
+    },
+    "AP_CredentialAbuse": {
+     "cves": [
+      [
+       "CVE-2026-105133",
+       7.3,
+       "CWE-287"
+      ],
+      [
+       "CVE-2026-42018",
+       7.5,
+       "CWE-287"
+      ],
+      [
+       "CVE-2026-59822",
+       8.2,
+       "CWE-287"
+      ]
+     ],
+     "mean_cvss": 7.67,
+     "severity": "High",
+     "vrt": {
+      "priorities": [
+       1
+      ],
+      "best": 1,
+      "typical": 1,
+      "tier": "$$$"
+     },
+     "owasp": [
+      "OWASP_2021_A07",
+      "OWASP_2025_A07"
+     ]
+    },
+    "AP_XXE": {
+     "cves": [
+      [
+       "CVE-2025-58360",
+       9.8,
+       "CWE-611"
+      ],
+      [
+       "CVE-2025-2775",
+       7.5,
+       "CWE-611"
+      ],
+      [
+       "CVE-2023-45727",
+       7.5,
+       "CWE-611"
+      ]
+     ],
+     "mean_cvss": 8.27,
+     "severity": "High",
+     "vrt": {
+      "priorities": [
+       1
+      ],
+      "best": 1,
+      "typical": 1,
+      "tier": "$$$"
+     },
+     "owasp": [
+      "OWASP_2021_A05",
+      "OWASP_2025_A02"
+     ]
+    }
+   },
+   "owasp": {
+    "OWASP_2021_A01": {
+     "code": "A01:2021",
+     "name": "Broken Access Control",
+     "cwes": 34
+    },
+    "OWASP_2021_A02": {
+     "code": "A02:2021",
+     "name": "Cryptographic Failures",
+     "cwes": 29
+    },
+    "OWASP_2021_A03": {
+     "code": "A03:2021",
+     "name": "Injection",
+     "cwes": 32
+    },
+    "OWASP_2021_A04": {
+     "code": "A04:2021",
+     "name": "Insecure Design",
+     "cwes": 40
+    },
+    "OWASP_2021_A05": {
+     "code": "A05:2021",
+     "name": "Security Misconfiguration",
+     "cwes": 20
+    },
+    "OWASP_2021_A06": {
+     "code": "A06:2021",
+     "name": "Vulnerable and Outdated Components",
+     "cwes": 3
+    },
+    "OWASP_2021_A07": {
+     "code": "A07:2021",
+     "name": "Identification and Authentication Failures",
+     "cwes": 22
+    },
+    "OWASP_2021_A08": {
+     "code": "A08:2021",
+     "name": "Software and Data Integrity Failures",
+     "cwes": 10
+    },
+    "OWASP_2021_A09": {
+     "code": "A09:2021",
+     "name": "Security Logging and Monitoring Failures",
+     "cwes": 4
+    },
+    "OWASP_2021_A10": {
+     "code": "A10:2021",
+     "name": "Server-Side Request Forgery (SSRF)",
+     "cwes": 1
+    },
+    "OWASP_2025_A01": {
+     "code": "A01:2025",
+     "name": "Broken Access Control",
+     "cwes": 40
+    },
+    "OWASP_2025_A02": {
+     "code": "A02:2025",
+     "name": "Security Misconfiguration",
+     "cwes": 16
+    },
+    "OWASP_2025_A03": {
+     "code": "A03:2025",
+     "name": "Software Supply Chain Failures",
+     "cwes": 6
+    },
+    "OWASP_2025_A04": {
+     "code": "A04:2025",
+     "name": "Cryptographic Failures",
+     "cwes": 32
+    },
+    "OWASP_2025_A05": {
+     "code": "A05:2025",
+     "name": "Injection",
+     "cwes": 37
+    },
+    "OWASP_2025_A06": {
+     "code": "A06:2025",
+     "name": "Insecure Design",
+     "cwes": 39
+    },
+    "OWASP_2025_A07": {
+     "code": "A07:2025",
+     "name": "Authentication Failures",
+     "cwes": 36
+    },
+    "OWASP_2025_A08": {
+     "code": "A08:2025",
+     "name": "Software or Data Integrity Failures",
+     "cwes": 14
+    },
+    "OWASP_2025_A09": {
+     "code": "A09:2025",
+     "name": "Logging & Alerting Failures",
+     "cwes": 5
+    },
+    "OWASP_2025_A10": {
+     "code": "A10:2025",
+     "name": "Mishandling of Exceptional Conditions",
+     "cwes": 24
+    }
+   }
+  },
+  "at": "2026-11-04T02:07:16"
+ },
+ "validate": {
+  "gate": {
+   "conforms": true,
+   "violations": [],
+   "warnings": [],
+   "hermit": {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "seconds": 1.83
+   },
+   "pellet": {
+    "consistent": true,
+    "seconds": 3.3
+   },
+   "triples": 2570
+  },
+  "rules": {
+   "EliteResearcher": [
+    "Researcher_CmdInjection",
+    "Researcher_Deserialization",
+    "Researcher_SQLi",
+    "Researcher_SSRF"
+   ],
+   "AuthorizedResearcher": [
+    "Researcher_CmdInjection",
+    "Researcher_Deserialization",
+    "Researcher_IDOR",
+    "Researcher_SQLi",
+    "Researcher_SSRF",
+    "Researcher_XSS"
+   ],
+   "PriorityReports": [
+    "Report_001",
+    "Report_003"
+   ],
+   "CVE_count": 32
+  },
+  "skill_vs_inferred": [
+   "Researcher_Deserialization"
+  ],
+  "v7_competency_questions": "8/8",
+  "at": "2026-11-04T02:07:34"
+ }
+}

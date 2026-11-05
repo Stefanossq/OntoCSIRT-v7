@@ -1,0 +1,11 @@
+{
+  "conforms": true,
+  "n_violations": 0,
+  "violations": [],
+  "n_triples": 1167,
+  "pellet": {
+    "consistent": true,
+    "seconds": 1.33,
+    "inferred_triples": 1201
+  }
+}

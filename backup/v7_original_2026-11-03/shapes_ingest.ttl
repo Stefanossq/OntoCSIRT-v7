@@ -1,0 +1,62 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# Restricoes adicionais para a ingestao (aplicadas JUNTO com shapes_v7.ttl).
+# As de duplicados usam SHACL-SPARQL (sh:sparql), que o pySHACL suporta.
+
+:OntoCSIRTPrefixes a owl:Ontology ;
+  sh:declare [ sh:prefix "" ; sh:namespace "http://www.semanticweb.org/ontocsirt#"^^xsd:anyURI ] ,
+             [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ,
+             [ sh:prefix "owl" ; sh:namespace "http://www.w3.org/2002/07/owl#"^^xsd:anyURI ] .
+
+# Dois atores com IRIs diferentes e o mesmo rotulo (sem maiusculas/espacos) sao duplicados,
+# salvo se declarados owl:sameAs. Atores UnknownActor sao isentos: rotulo igual e esperado.
+:DuplicateActorShape a sh:NodeShape ; sh:targetClass :ThreatActor ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :OntoCSIRTPrefixes ;
+    sh:message "Ator duplicado: {?other} tem o mesmo rotulo que {$this}." ;
+    sh:select """SELECT $this ?other WHERE {
+        $this rdfs:label ?l . ?other a :ThreatActor ; rdfs:label ?l2 .
+        FILTER(?other != $this)
+        FILTER(LCASE(REPLACE(STR(?l), "\\\\s+", "")) = LCASE(REPLACE(STR(?l2), "\\\\s+", "")))
+        FILTER NOT EXISTS { $this a :UnknownActor }
+        FILTER NOT EXISTS { $this owl:sameAs ?other }
+        FILTER NOT EXISTS { ?other owl:sameAs $this } }""" ] ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :OntoCSIRTPrefixes ;
+    sh:message "Endereco de origem {?ip} repetido em atores diferentes: {$this} e {?other}." ;
+    sh:select """SELECT $this ?other ?ip WHERE {
+        $this :sourceAddress ?ip . ?other :sourceAddress ?ip . FILTER(?other != $this) }""" ] .
+
+# A mesma CVE em duas vulnerabilidades diferentes.
+:DuplicateCveShape a sh:NodeShape ; sh:targetSubjectsOf :cveId ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :OntoCSIRTPrefixes ;
+    sh:message "CVE duplicado: {?id} aparece em {$this} e em {?other}." ;
+    sh:select """SELECT $this ?other ?id WHERE {
+        $this :cveId ?id . ?other :cveId ?id2 . FILTER(?other != $this && STR(?id) = STR(?id2)) }""" ] .
+
+# Padroes ATT&CK: Txxxx ou Txxxx.yyy
+:AttackIdShape a sh:NodeShape ; sh:targetSubjectsOf :attackId ;
+  sh:property [ sh:path :attackId ; sh:maxCount 1 ; sh:pattern "^T[0-9]{4}(\\.[0-9]{3})?$" ;
+                sh:message "Identificador ATT&CK mal formado." ] .
+
+# Vulnerabilidades vindas do KEV: data, CVE obrigatorio e fonte declarada.
+:KevVulnerabilityShape a sh:NodeShape ; sh:targetSubjectsOf :kevDateAdded ;
+  sh:property [ sh:path :kevDateAdded ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ; sh:message "Data KEV ausente ou nao xsd:date." ] ;
+  sh:property [ sh:path :cveId ; sh:minCount 1 ; sh:message "Vulnerabilidade do KEV sem cveId." ] ;
+  sh:property [ sh:path :cvssSource ; sh:minCount 1 ; sh:message "CVSS sem fonte declarada." ] .
+
+# Casos ingeridos: proveniencia obrigatoria e solucao do tipo ResolutionAction.
+:IngestedCaseShape a sh:NodeShape ; sh:targetSubjectsOf :kevRequiredAction ;
+  sh:property [ sh:path :solutionProvenance ; sh:minCount 1 ; sh:maxCount 1 ;
+                sh:in ( "policy:cwe-category-v1" "kev:requiredAction" ) ; sh:message "Caso ingerido sem proveniencia da solucao." ] ;
+  sh:property [ sh:path :hasSolution ; sh:class :ResolutionAction ; sh:message "Solucao nao e uma ResolutionAction." ] .
+
+# Cada CWE pertence a uma so categoria (o OWL tambem o garante pela disjuncao; aqui da a mensagem).
+:SingleCategoryShape a sh:NodeShape ; sh:targetClass :Weakness ;
+  sh:sparql [ a sh:SPARQLConstraint ; sh:prefixes :OntoCSIRTPrefixes ;
+    sh:message "CWE com mais de uma categoria: {?c1} e {?c2}." ;
+    sh:select """SELECT $this ?c1 ?c2 WHERE {
+        $this a ?c1 , ?c2 . ?c1 rdfs:subClassOf :Weakness . ?c2 rdfs:subClassOf :Weakness .
+        FILTER(?c1 != ?c2 && ?c1 != :Weakness && ?c2 != :Weakness && STR(?c1) < STR(?c2)) }""" ] .

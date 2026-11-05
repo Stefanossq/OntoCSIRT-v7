@@ -1,0 +1,13 @@
+.env
+.git
+**/__pycache__
+**/*.pyc
+.pytest_cache
+backup/
+artigo/
+evolution/backups/
+cache/gemini/
+# cache do NVD em tempo real (nvd_<CVE>.json, 24 h): e estado de execucao, nao vai na imagem; a cache de
+# investigacao do ETL (cache/nvd/) e os catalogos ficam, para a ingestao ser reprodutivel sem rede
+cache/nvd_*.json
+OntoCSIRT_v7_composed_*.ttl

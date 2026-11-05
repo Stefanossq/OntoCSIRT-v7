@@ -1,0 +1,54 @@
+name: testes
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ontologia:
+    name: Ontologia e suíte pytest (Python 3.12, Java 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verificação rápida (sintaxe, HermiT, Pellet, SHACL, 8 CQs, defeitos injetados)
+        run: python verificar_ontologia.py
+      - name: Suíte completa
+        run: python -m pytest -q tests -p no:warnings
+
+  docker:
+    name: Imagem Docker e webhook
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir a imagem (testa o HermiT e o Pellet na construção)
+        run: docker build -t ontocsirt-webhook:7 .
+      - name: Subir o webhook e testar /health e /alert
+        env:
+          ONTOCSIRT_TOKEN: token-de-ci
+        run: |
+          echo "ONTOCSIRT_TOKEN=$ONTOCSIRT_TOKEN" > .env
+          docker compose up -d
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8088/health && break; sleep 2; done
+          curl -sf http://127.0.0.1:8088/health
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8088/alert -d '{}')" = 401
+          curl -sf -X POST http://127.0.0.1:8088/alert -H "X-OntoCSIRT-Token: $ONTOCSIRT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"src_ip":"198.51.100.23","attack_type":"sqli","target":"Server_1","cve":"CVE-2023-34362","attribute":"confidentiality","alert_id":"CI-1"}' \
+            | tee resposta.json
+          grep -q '"action"' resposta.json
+      - name: Suíte pytest dentro do contentor
+        run: docker compose run --rm --entrypoint python webhook -m pytest -q tests -p no:warnings
+      - if: always()
+        run: docker compose logs; docker compose down -v
