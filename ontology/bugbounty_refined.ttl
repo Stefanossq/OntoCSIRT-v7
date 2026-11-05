@@ -1,0 +1,403 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix bb: <http://www.semanticweb.org/ontocsirt/bugbounty#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+#############################################################################
+# OntoBugBounty - LAPIDACAO (bb-2): propostas P1-P19 aprovadas em 2026-11-04
+#
+# Compoe-se DEPOIS de OntoBugBounty.ttl (v7 + ext + evo + OntoBugBounty + este ficheiro).
+# Sem owl:imports, como o resto do projeto. Mesmo espaco de nomes (:) do v7.
+#
+# Regra deste ficheiro: SO ADICIONA. Nenhum termo de OntoBugBounty.ttl e removido ou redefinido.
+# As unicas alteracoes a termos existentes sao duas declaracoes owl:FunctionalProperty
+# (:eligibleForSubmission em P4, :scopeType em P6) e anotacoes de revisao (:RedHat, :hasSkillLevel).
+#
+# Cada termo novo leva bb:proposal (numero da proposta), dcterms:source (URL) e bb:sourceAccessed.
+# Relatorio: docs/bugbounty_lapidacao_passo0-1.md (proposta) e docs/bugbounty_refined_relatorio.md (mudancas).
+#
+# Decisoes herdadas da proposta aprovada:
+#   * P5: o tipo de ativo "API" NAO entra (ausente da doc oficial da HackerOne); "Domain" tambem nao
+#         entra como literal, porque nao ha fonte para o seu valor no enum asset_type da API.
+#   * P14: nao ha classe DuplicateStatus; o estado continua em :status.
+#   * P15b: :RedHat mantem-se, anotada como sem fonte academica.
+#   * P17: Seebug fica fora ate revisao (base de vulnerabilidades/PoC, nao claramente bug bounty).
+#   * P18: :targetsVulnerability NAO e subpropriedade de :relatedWeakness (dominio :AttackPattern no v7
+#          -> inconsistencia; verificado com o HermiT, ver relatorio).
+#   * P19: subvariantes CWE NAO sao adicionadas (so listadas no comentario de P19).
+#############################################################################
+
+<http://www.semanticweb.org/ontocsirt/bugbounty-refined> a owl:Ontology ;
+    rdfs:label "OntoBugBounty - lapidacao bb-2 (visibilidade, gestao, escopo, recompensa, severidade CVSS, disclosure, duplicatas, chapeus, reputacao, plataformas)" ;
+    owl:versionInfo "bb-2" ;
+    dcterms:created "2026-11-04"^^xsd:date ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> .
+
+# --- anotacoes de rastreabilidade -------------------------------------------
+bb:proposal a owl:AnnotationProperty ; rdfs:label "proposta de lapidacao (P1-P22)"@pt .
+bb:sourceAccessed a owl:AnnotationProperty ; rdfs:label "data de acesso a fonte"@pt .
+bb:reviewNote a owl:AnnotationProperty ; rdfs:label "nota de revisao humana pendente"@pt .
+bb:cvssRange a owl:AnnotationProperty ; rdfs:label "faixa CVSS do nivel"@pt .
+
+#############################################################################
+# P1. Visibilidade do programa (publico / privado)
+#############################################################################
+:ProgramVisibility a owl:Class ; rdfs:label "Visibilidade do programa"@pt , "Program visibility"@en ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Visibility_Public :Visibility_Private ) ] ;
+    bb:proposal "P1" ; dcterms:source <https://docs.hackerone.com/en/articles/8368948-private-vs-public-programs> ,
+        <https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-15/documents/723920/539484723838229-service-definition-document-2025-12-15-1335.pdf> ;
+    bb:sourceAccessed "2026-11-04" .
+:Visibility_Public a owl:NamedIndividual , :ProgramVisibility ; rdfs:label "Publico"@pt , "Public"@en ;
+    rdfs:comment "Aberto a toda a comunidade da plataforma (HackerOne: 'all hackers on HackerOne are given rights to hack the program')." .
+:Visibility_Private a owl:NamedIndividual , :ProgramVisibility ; rdfs:label "Privado"@pt , "Private"@en ;
+    rdfs:comment "So por convite; relatorios confidenciais. Todo programa H1 comeca privado." .
+[] a owl:AllDifferent ; owl:distinctMembers ( :Visibility_Public :Visibility_Private ) .
+
+:hasVisibility a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem visibilidade"@pt ;
+    rdfs:domain :BugBountyProgram ; rdfs:range :ProgramVisibility ; bb:proposal "P1" ;
+    rdfs:comment "Retrato num dado momento: a visibilidade pode mudar (privado -> publico)." .
+:BugBountyProgram rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasVisibility ;
+    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :ProgramVisibility ] .
+
+:PublicProgram a owl:Class ; rdfs:label "Programa publico"@pt , "Public program"@en ; bb:proposal "P1" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :BugBountyProgram
+        [ a owl:Restriction ; owl:onProperty :hasVisibility ; owl:hasValue :Visibility_Public ] ) ] .
+:PrivateProgram a owl:Class ; rdfs:label "Programa privado"@pt , "Private program"@en ; bb:proposal "P1" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :BugBountyProgram
+        [ a owl:Restriction ; owl:onProperty :hasVisibility ; owl:hasValue :Visibility_Private ] ) ] ;
+    owl:disjointWith :PublicProgram .
+
+#############################################################################
+# P2. Modelo de gestao (managed / self-managed)
+#############################################################################
+:ProgramManagementModel a owl:Class ; rdfs:label "Modelo de gestao do programa"@pt , "Program management model"@en ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Management_Managed :Management_SelfManaged ) ] ;
+    bb:proposal "P2" ; dcterms:source <https://www.bugcrowd.com/glossary/bug-bounty-program-bbp/> ,
+        <https://www.intigriti.com/blog/business-insights/bug-bounty-diy-the-pros-and-cons-of-managing-vulnerability-disclosure-in-house> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Fontes de fornecedor (marketing), nao documentacao tecnica; 'managed' varia entre plataformas." .
+:Management_Managed a owl:NamedIndividual , :ProgramManagementModel ; rdfs:label "Gerido pela plataforma"@pt , "Managed"@en ;
+    rdfs:comment "A plataforma assume triagem, validacao e comunicacao." .
+:Management_SelfManaged a owl:NamedIndividual , :ProgramManagementModel ; rdfs:label "Autogerido"@pt , "Self-managed"@en ;
+    rdfs:comment "A organizacao controla escopo, regras, comunicacao e recompensas (Bugcrowd, glossario)." .
+[] a owl:AllDifferent ; owl:distinctMembers ( :Management_Managed :Management_SelfManaged ) .
+
+:hasManagementModel a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem modelo de gestao"@pt ;
+    rdfs:domain :BugBountyProgram ; rdfs:range :ProgramManagementModel ; bb:proposal "P2" ;
+    rdfs:comment "No maximo um (Functional); nao e obrigatorio: a API da HackerOne nao expoe este dado." .
+:ManagedProgram a owl:Class ; rdfs:label "Programa gerido"@pt , "Managed program"@en ; bb:proposal "P2" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :BugBountyProgram
+        [ a owl:Restriction ; owl:onProperty :hasManagementModel ; owl:hasValue :Management_Managed ] ) ] .
+:SelfManagedProgram a owl:Class ; rdfs:label "Programa autogerido"@pt , "Self-managed program"@en ; bb:proposal "P2" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :BugBountyProgram
+        [ a owl:Restriction ; owl:onProperty :hasManagementModel ; owl:hasValue :Management_SelfManaged ] ) ] ;
+    owl:disjointWith :ManagedProgram .
+
+#############################################################################
+# P3. Solo / colaborativo - no nivel do RELATORIO (nao ha fonte para tipo de programa)
+#############################################################################
+:CollaborativeReport a owl:Class ; rdfs:label "Relatorio colaborativo"@pt , "Collaborative report"@en ; bb:proposal "P3" ;
+    rdfs:comment "Dois ou mais pesquisadores (distintos) no mesmo relatorio. HackerOne: ate 10 colaboradores, bounty dividido por pesos; Intigriti: idem. Sem UNA no OWL: so e inferido se os pesquisadores forem declarados distintos." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Report
+        [ a owl:Restriction ; owl:onProperty :submittedBy ;
+          owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ; owl:onClass :Researcher ] ) ] ;
+    dcterms:source <https://docs.hackerone.com/en/articles/8457618-collaboration> ,
+        <https://www.intigriti.com/blog/product-updates/introducing-report-collaboration-split-these-bounties> ;
+    bb:sourceAccessed "2026-11-04" .
+:SoloReport a owl:Class ; rdfs:label "Relatorio individual"@pt , "Solo report"@en ; bb:proposal "P3" ;
+    rdfs:comment "No maximo um pesquisador. Mundo aberto: so e inferido com fecho explicito (<= 1)." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Report
+        [ a owl:Restriction ; owl:onProperty :submittedBy ;
+          owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :Researcher ] ) ] ;
+    owl:disjointWith :CollaborativeReport .
+
+#############################################################################
+# P4. Dentro / fora do escopo
+#############################################################################
+:eligibleForSubmission a owl:FunctionalProperty .   # M: passa a funcional (um valor por item de escopo)
+
+:InScopeItem a owl:Class ; rdfs:label "Item dentro do escopo"@pt , "In-scope asset"@en ; bb:proposal "P4" ;
+    rdfs:comment "Nome sem 'Asset' porque :Scope e disjunto de :Asset no modulo. Mapeamento: eligible_for_submission = true." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :eligibleForSubmission ; owl:hasValue true ] ) ] ;
+    dcterms:source <https://docs.hackerone.com/en/articles/8593105-asset-details-and-scoping> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Equiparar eligible_for_submission=false a 'fora do escopo' e decisao de mapeamento; confirmar na referencia da API H1." .
+:OutOfScopeItem a owl:Class ; rdfs:label "Item fora do escopo"@pt , "Out-of-scope asset"@en ; bb:proposal "P4" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :eligibleForSubmission ; owl:hasValue false ] ) ] ;
+    owl:disjointWith :InScopeItem .
+
+#############################################################################
+# P5. Tipos de ativo (classes definidas sobre :scopeType, literais do enum asset_type da API H1)
+# P6. Curinga vs. especifico
+#############################################################################
+:scopeType a owl:FunctionalProperty .   # M: passa a funcional (necessario para inferir :SpecificScope)
+
+:WebApplicationScope a owl:Class ; rdfs:label "Escopo: aplicacao web"@pt , "Web application scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope [ a owl:Class ; owl:unionOf (
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "URL" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "WILDCARD" ] ) ] ) ] ;
+    rdfs:comment "HackerOne: URL, Wildcard (e Domain, sem literal confirmado no enum; nao incluido)." .
+:MobileAppScope a owl:Class ; rdfs:label "Escopo: aplicacao movel"@pt , "Mobile app scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope [ a owl:Class ; owl:unionOf (
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "APPLE_STORE_APP_ID" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "TESTFLIGHT" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "OTHER_IPA" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "GOOGLE_PLAY_APP_ID" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "OTHER_APK" ] ) ] ) ] ;
+    rdfs:comment "HackerOne: iOS App Store, iOS TestFlight, iOS .ipa, Android Play Store, Android .apk." .
+:NetworkScope a owl:Class ; rdfs:label "Escopo: rede"@pt , "Network scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope [ a owl:Class ; owl:unionOf (
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "CIDR" ]
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "IP_ADDRESS" ] ) ] ) ] ;
+    rdfs:comment "HackerOne: CIDR, IP Address." .
+:HardwareScope a owl:Class ; rdfs:label "Escopo: hardware/IoT"@pt , "Hardware scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "HARDWARE" ] ) ] .
+:SourceCodeScope a owl:Class ; rdfs:label "Escopo: codigo-fonte"@pt , "Source code scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "SOURCE_CODE" ] ) ] .
+:ExecutableScope a owl:Class ; rdfs:label "Escopo: executavel"@pt , "Executable scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "DOWNLOADABLE_EXECUTABLES" ] ) ] .
+:SmartContractScope a owl:Class ; rdfs:label "Escopo: contrato inteligente"@pt , "Smart contract scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "SMART_CONTRACT" ] ) ] .
+:AIModelScope a owl:Class ; rdfs:label "Escopo: modelo de IA"@pt , "AI model scope"@en ; bb:proposal "P5" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "AI_MODEL" ] ) ] .
+[] a owl:AllDisjointClasses ; owl:members ( :WebApplicationScope :MobileAppScope :NetworkScope :HardwareScope
+    :SourceCodeScope :ExecutableScope :SmartContractScope :AIModelScope ) .
+# Fontes de P5: tipos (nomes) na doc oficial; literais do enum numa fonte secundaria.
+:WebApplicationScope dcterms:source <https://docs.hackerone.com/organizations/asset-types.html> ,
+    <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+
+:WildcardScope a owl:Class ; rdfs:label "Escopo curinga"@pt , "Wildcard scope"@en ; bb:proposal "P6" ;
+    rdfs:comment "HackerOne: 'A way to specify multiple domains or subdomains' (p.ex. *.example.org)." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope
+        [ a owl:Restriction ; owl:onProperty :scopeType ; owl:hasValue "WILDCARD" ] ) ] ;
+    dcterms:source <https://docs.hackerone.com/organizations/asset-types.html> ; bb:sourceAccessed "2026-11-04" .
+:SpecificScope a owl:Class ; rdfs:label "Escopo especifico"@pt , "Specific scope"@en ; bb:proposal "P6" ;
+    rdfs:comment "Qualquer item de escopo que nao e curinga. Inferido porque :scopeType e funcional." ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Scope [ a owl:Class ; owl:complementOf :WildcardScope ] ) ] .
+
+#############################################################################
+# P7. Recompensa monetaria / nao monetaria
+#############################################################################
+:MonetaryReward a owl:Class ; rdfs:subClassOf :Reward ; rdfs:label "Recompensa monetaria"@pt , "Monetary reward"@en ; bb:proposal "P7" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Reward
+        [ a owl:Restriction ; owl:onProperty :rewardAmount ; owl:someValuesFrom xsd:decimal ] ) ] ;
+    dcterms:source <https://docs.bugcrowd.com/researchers/receiving-rewards/getting-rewarded/> ; bb:sourceAccessed "2026-11-04" .
+:NonMonetaryReward a owl:Class ; rdfs:subClassOf :Reward ; rdfs:label "Recompensa nao monetaria"@pt , "Non-monetary reward"@en ; bb:proposal "P7" ;
+    rdfs:comment "Agradecimento, swag, hall of fame (HackerOne: programs can offer 'thanks, swag, and/or bounties'). Pontos de reputacao NAO sao recompensa do programa (ver P16)." ;
+    owl:disjointWith :MonetaryReward ;
+    dcterms:source <https://www.hackerone.com/hackers/how-to-start-hacking> ; bb:sourceAccessed "2026-11-04" .
+:rewardKind a owl:DatatypeProperty ; rdfs:label "tipo de recompensa"@pt ; rdfs:domain :Reward ; rdfs:range xsd:string ;
+    bb:proposal "P7" ; rdfs:comment "Texto livre: 'thanks', 'swag', 'hall of fame', 'bounty'." .
+
+#############################################################################
+# P9. Severidade (escala qualitativa do CVSS) e P9b. prioridade VRT
+#############################################################################
+:SeverityRating a owl:Class ; rdfs:label "Nivel de severidade (CVSS)"@pt , "Severity rating (CVSS)"@en ; bb:proposal "P9" ;
+    rdfs:comment "Tabela 22 do CVSS v4.0 (mesma escala do v3.1). 'Info' nao e termo do CVSS: corresponde a None. A R1 do v7 usa 4 faixas (sem None): compativel." ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Severity_None :Severity_Low :Severity_Medium :Severity_High :Severity_Critical ) ] ;
+    dcterms:source <https://www.first.org/cvss/v4.0/specification-document> , <https://docs.hackerone.com/organizations/bounty-tables.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:Severity_None a owl:NamedIndividual , :SeverityRating ; rdfs:label "None"@en , "Info"@en , "Nenhuma"@pt ; bb:cvssRange "0.0" .
+:Severity_Low a owl:NamedIndividual , :SeverityRating ; rdfs:label "Low"@en , "Baixa"@pt ; bb:cvssRange "0.1-3.9" .
+:Severity_Medium a owl:NamedIndividual , :SeverityRating ; rdfs:label "Medium"@en , "Media"@pt ; bb:cvssRange "4.0-6.9" .
+:Severity_High a owl:NamedIndividual , :SeverityRating ; rdfs:label "High"@en , "Alta"@pt ; bb:cvssRange "7.0-8.9" .
+:Severity_Critical a owl:NamedIndividual , :SeverityRating ; rdfs:label "Critical"@en , "Critica"@pt ; bb:cvssRange "9.0-10.0" .
+[] a owl:AllDifferent ; owl:distinctMembers ( :Severity_None :Severity_Low :Severity_Medium :Severity_High :Severity_Critical ) .
+
+:hasSeverityRating a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem nivel de severidade"@pt ; bb:proposal "P9" ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( :Report :Scope :AttackPattern :BountyTableEntry ) ] ; rdfs:range :SeverityRating ;
+    rdfs:comment "Versao objeto das strings :hasSeverity (AttackPattern) e :maxSeverity (Scope), que ficam por retrocompatibilidade." .
+
+:VRTPriority a owl:Class ; rdfs:label "Prioridade do Bugcrowd VRT"@pt , "Bugcrowd VRT priority"@en ; bb:proposal "P9b" ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Priority_P1 :Priority_P2 :Priority_P3 :Priority_P4 :Priority_P5 ) ] ;
+    dcterms:source <https://docs.bugcrowd.com/researchers/receiving-rewards/getting-rewarded/> ; bb:sourceAccessed "2026-11-04" ;
+    rdfs:comment "Escala de prioridade (nao de severidade CVSS). Taxonomia: cache/catalogs/bugcrowd_vrt.json (2026-07-08)." .
+:Priority_P1 a owl:NamedIndividual , :VRTPriority ; rdfs:label "P1" .
+:Priority_P2 a owl:NamedIndividual , :VRTPriority ; rdfs:label "P2" .
+:Priority_P3 a owl:NamedIndividual , :VRTPriority ; rdfs:label "P3" .
+:Priority_P4 a owl:NamedIndividual , :VRTPriority ; rdfs:label "P4" .
+:Priority_P5 a owl:NamedIndividual , :VRTPriority ; rdfs:label "P5" .
+[] a owl:AllDifferent ; owl:distinctMembers ( :Priority_P1 :Priority_P2 :Priority_P3 :Priority_P4 :Priority_P5 ) .
+
+#############################################################################
+# P8. Tabela de recompensas (BountyTable / RewardRange)
+#############################################################################
+:BountyTable a owl:Class ; rdfs:label "Tabela de recompensas"@pt , "Bounty table"@en ; bb:proposal "P8" ;
+    rdfs:comment "HackerOne: 'The bounties in the table are categorized based on the severity of the issue identified'." ;
+    dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:BountyTableEntry a owl:Class ; rdfs:label "Linha da tabela de recompensas"@pt , "Bounty table entry"@en , "Reward range"@en ; bb:proposal "P8" ;
+    rdfs:comment "E o RewardRange (min, max, moeda) de uma severidade. As propriedades :hasMinBounty/:hasMaxBounty do programa ficam (faixa global)." ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :forSeverity ;
+        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :SeverityRating ] .
+:hasBountyTable a owl:ObjectProperty ; rdfs:label "tem tabela de recompensas"@pt ; rdfs:domain :BugBountyProgram ; rdfs:range :BountyTable ; bb:proposal "P8" .
+:hasEntry a owl:ObjectProperty ; rdfs:label "tem linha"@pt ; rdfs:domain :BountyTable ; rdfs:range :BountyTableEntry ; bb:proposal "P8" .
+:forSeverity a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:subPropertyOf :hasSeverityRating ; rdfs:label "para a severidade"@pt ;
+    rdfs:domain :BountyTableEntry ; rdfs:range :SeverityRating ; bb:proposal "P8" .
+:forPriority a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "para a prioridade VRT"@pt ;
+    rdfs:domain :BountyTableEntry ; rdfs:range :VRTPriority ; bb:proposal "P9b" ;
+    rdfs:comment "Para programas Bugcrowd, cuja tabela e indexada por prioridade P1-P5." .
+:entryMinAmount a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "valor minimo"@pt ; rdfs:domain :BountyTableEntry ; rdfs:range xsd:decimal ; bb:proposal "P8" .
+:entryMaxAmount a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "valor maximo"@pt ; rdfs:domain :BountyTableEntry ; rdfs:range xsd:decimal ; bb:proposal "P8" .
+:entryCurrency a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "moeda"@pt ; rdfs:domain :BountyTableEntry ; rdfs:range xsd:string ; bb:proposal "P8" .
+
+#############################################################################
+# P10. Politica de divulgacao  ·  P11. abrangencia da divulgacao do relatorio  ·  P12. prazos
+#############################################################################
+:DisclosurePolicy a owl:Class ; rdfs:label "Politica de divulgacao"@pt , "Disclosure policy"@en ; bb:proposal "P10" ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :CoordinatedDisclosure :FullDisclosure :NonDisclosure ) ] ;
+    dcterms:source <https://certcc.github.io/CERT-Guide-to-CVD/tutorials/terms/cvd> , <https://docs.hackerone.com/organizations/disclosure.html> ,
+        <https://committee.iso.org/standard/72311.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:CoordinatedDisclosure a owl:NamedIndividual , :DisclosurePolicy ; rdfs:label "Divulgacao coordenada (CVD)"@pt , "Coordinated vulnerability disclosure"@en ;
+    rdfs:comment "CERT/CC: recolher a informacao de quem encontrou, partilha-la com as partes interessadas e divulgar." .
+:FullDisclosure a owl:NamedIndividual , :DisclosurePolicy ; rdfs:label "Divulgacao completa"@pt , "Full disclosure"@en ;
+    rdfs:comment "Divulgacao publica imediata, haja correcao ou nao. NAO confundir com o 'Full disclosure' da HackerOne (conteudo do relatorio, ver P11)." ;
+    bb:reviewNote "Definicao so encontrada em fonte secundaria; falta fonte primaria (d-5)." .
+:NonDisclosure a owl:NamedIndividual , :DisclosurePolicy ; rdfs:label "Sem divulgacao"@pt , "No disclosure"@en ;
+    rdfs:comment "HackerOne: definicao em que a divulgacao nao e permitida para nenhum relatorio." .
+[] a owl:AllDifferent ; owl:distinctMembers ( :CoordinatedDisclosure :FullDisclosure :NonDisclosure ) .
+:hasDisclosurePolicy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem politica de divulgacao"@pt ;
+    rdfs:domain :BugBountyProgram ; rdfs:range :DisclosurePolicy ; bb:proposal "P10" .
+
+:ReportDisclosureScope a owl:Class ; rdfs:label "Abrangencia da divulgacao do relatorio"@pt , "Report disclosure scope"@en ; bb:proposal "P11" ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :FullReportDisclosure :LimitedReportDisclosure ) ] ;
+    rdfs:comment "So existe na HackerOne: o que do relatorio e tornado publico." ;
+    dcterms:source <https://docs.hackerone.com/hackers/disclosure.html> ; bb:sourceAccessed "2026-11-04" .
+:FullReportDisclosure a owl:NamedIndividual , :ReportDisclosureScope ; rdfs:label "Divulgacao integral do relatorio"@pt ;
+    rdfs:comment "Conteudo completo, incluindo comentarios e anexos." .
+:LimitedReportDisclosure a owl:NamedIndividual , :ReportDisclosureScope ; rdfs:label "Divulgacao limitada do relatorio"@pt ;
+    rdfs:comment "So resumo e cronologia; comentarios e anexos ocultos." .
+[] a owl:AllDifferent ; owl:distinctMembers ( :FullReportDisclosure :LimitedReportDisclosure ) .
+:hasReportDisclosureScope a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem abrangencia de divulgacao"@pt ;
+    rdfs:domain :Report ; rdfs:range :ReportDisclosureScope ; bb:proposal "P11" .
+
+:DisclosureTimeline a owl:Class ; rdfs:label "Prazos de divulgacao"@pt , "Disclosure timeline"@en ; bb:proposal "P12" ;
+    rdfs:comment "Prazos (dias) de uma politica de divulgacao: embargo ate a divulgacao, dias apos a correcao e prazo para exploracao ativa." .
+:hasDisclosureTimeline a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "tem prazos de divulgacao"@pt ;
+    rdfs:domain :BugBountyProgram ; rdfs:range :DisclosureTimeline ; bb:proposal "P12" .
+:daysToDisclosure a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "dias ate a divulgacao (embargo)"@pt ;
+    rdfs:domain :DisclosureTimeline ; rdfs:range xsd:integer ; bb:proposal "P12" .
+:postPatchDays a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "dias apos a correcao"@pt ;
+    rdfs:domain :DisclosureTimeline ; rdfs:range xsd:integer ; bb:proposal "P12" .
+:inTheWildDays a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "prazo se explorada ativamente (dias)"@pt ;
+    rdfs:domain :DisclosureTimeline ; rdfs:range xsd:integer ; bb:proposal "P12" .
+
+:Timeline_HackerOneDefault a owl:NamedIndividual , :DisclosureTimeline ; rdfs:label "HackerOne - diretrizes de divulgacao (padrao)" ;
+    :postPatchDays 30 ;
+    rdfs:comment "Sem objecao das partes, o conteudo e publicado em 30 dias se o estado for Resolved. Recusa ou falta de resposta do cliente: nao divulga." ;
+    dcterms:source <https://hackerone.com/disclosure-guidelines> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Reconfirmar versao das diretrizes (v1.3, 2026-07-27 segundo a pesquisa)." .
+:Timeline_ProjectZero a owl:NamedIndividual , :DisclosureTimeline ; rdfs:label "Google Project Zero - politica 90+30" ;
+    :daysToDisclosure 90 ; :postPatchDays 30 ; :inTheWildDays 7 ;
+    dcterms:source <https://projectzero.google/vulnerability-disclosure-policy.html> ; bb:sourceAccessed "2026-11-04" .
+:Timeline_CERTCC a owl:NamedIndividual , :DisclosureTimeline ; rdfs:label "CERT/CC - politica de 45 dias" ;
+    :daysToDisclosure 45 ;
+    dcterms:source <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Fonte secundaria; substituir pela pagina do CERT/CC." .
+
+#############################################################################
+# P13. Original vs. duplicata   (P14: sem classe DuplicateStatus; o estado continua em :status)
+#############################################################################
+:duplicateOf a owl:ObjectProperty , owl:FunctionalProperty , owl:IrreflexiveProperty , owl:AsymmetricProperty ;
+    rdfs:label "duplicata de"@pt ; rdfs:domain :Report ; rdfs:range :Report ; bb:proposal "P13" ;
+    rdfs:comment "Liga a duplicata ao relatorio original (H1: atribuir ao original; Bugcrowd: obrigatorio indicar o original e a duplicata herda o estado dele; Intigriti: ligar ao 'parent'). Se o original estiver fora da plataforma (Bugcrowd permite), use uma anotacao em vez desta propriedade." ;
+    dcterms:source <https://docs.hackerone.com/hackers/report-states.html> , <https://docs.bugcrowd.com/customers/submission-management/submission-status> ,
+        <https://kb.intigriti.com/en/articles/5191201-handling-submissions> ;
+    bb:sourceAccessed "2026-11-04" .
+:DuplicateReport a owl:Class ; rdfs:subClassOf :Report ; rdfs:label "Relatorio duplicado"@pt , "Duplicate report"@en ; bb:proposal "P13" ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Report
+        [ a owl:Restriction ; owl:onProperty :duplicateOf ; owl:someValuesFrom :Report ] ) ] .
+:OriginalReport a owl:Class ; rdfs:subClassOf :Report ; rdfs:label "Relatorio original"@pt , "Original report"@en ; bb:proposal "P13" ;
+    rdfs:comment "Declarada (mundo aberto: nao se infere 'original' pela ausencia de duplicateOf)." ;
+    owl:disjointWith :DuplicateReport .
+
+#############################################################################
+# P15. Chapeus: WhiteHat + disjuncao White/Gray/Black   (P15b: RedHat mantida, anotada)
+#############################################################################
+:WhiteHat a owl:Class ; rdfs:subClassOf :Researcher ; rdfs:label "White hat"@en ; bb:proposal "P15a" ;
+    rdfs:comment "Testa com autorizacao. Subclasse de :Researcher (nao de :ThreatActor) e NAO equivalente a :AuthorizedResearcher. ATENCAO: a disjuncao com GrayHat/BlackHat impede que um mesmo individuo seja declarado white hat e gray hat (o modulo bb-1 admitia os dois papeis na mesma pessoa)." ;
+    dcterms:source <https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2004-20.pdf> ; bb:sourceAccessed "2026-11-04" .
+[] a owl:AllDisjointClasses ; owl:members ( :WhiteHat :GrayHat :BlackHat ) .
+:WhiteHat owl:disjointWith :RedHat .
+:BlackHat dcterms:source <https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2004-20.pdf> ; bb:proposal "P15a" .
+:GrayHat dcterms:source <https://www.cerias.purdue.edu/assets/pdf/bibtex_archive/2004-20.pdf> ; bb:proposal "P15a" .
+:RedHat bb:proposal "P15b" ; bb:reviewNote "Sem fonte academica encontrada (pesquisa de 2026-11-04); mantida para nao quebrar o bb-1." .
+
+#############################################################################
+# P16. Reputacao por plataforma (numerica; os niveis novice..elite ficam em revisao)
+#############################################################################
+:ResearcherProfile a owl:Class ; rdfs:label "Perfil do pesquisador numa plataforma"@pt , "Researcher profile"@en ; bb:proposal "P16" ;
+    rdfs:comment "A reputacao e por plataforma: H1 (reputacao, Signal, Impact), Intigriti (pontos de reputacao), Bugcrowd (pontos e rank)." ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :onPlatform ;
+        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :BugBountyPlatform ] ;
+    dcterms:source <https://docs.hackerone.com/hackers/reputation.html> , <https://docs.hackerone.com/hackers/signal-and-impact.html> ,
+        <https://kb.intigriti.com/en/articles/3379630-leaderboard-reputation-and-streak> ,
+        <https://docs.bugcrowd.com/researchers/managing-account/performance-metrics/rank> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasProfile a owl:ObjectProperty ; rdfs:label "tem perfil"@pt ;
+    rdfs:domain :Researcher ; rdfs:range :ResearcherProfile ; bb:proposal "P16" .
+:onPlatform a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:label "na plataforma"@pt ;
+    rdfs:domain :ResearcherProfile ; rdfs:range :BugBountyPlatform ; bb:proposal "P16" .
+:reputationPoints a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "pontos de reputacao"@pt ;
+    rdfs:domain :ResearcherProfile ; rdfs:range xsd:decimal ; bb:proposal "P16" .
+:signal a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "Signal (HackerOne)"@pt ;
+    rdfs:domain :ResearcherProfile ; rdfs:range xsd:decimal ; bb:proposal "P16" ;
+    rdfs:comment "Consistencia de relatorios validos (HackerOne)." .
+:impact a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:label "Impact (HackerOne)"@pt ;
+    rdfs:domain :ResearcherProfile ; rdfs:range xsd:decimal ; bb:proposal "P16" ;
+    rdfs:comment "Severidade media dos relatorios (HackerOne)." .
+:hasSkillLevel bb:reviewNote "Valores Junior/Senior/Elite sem fonte de plataforma (d-2); mantidos por compatibilidade com o SHACL e a BB-1." .
+
+#############################################################################
+# P17. Plataformas (Seebug fica fora ate revisao)
+#############################################################################
+:BugBountyPlatform rdfs:label "Platform"@en .
+:Platform_YesWeHack a owl:NamedIndividual , :BugBountyPlatform ; rdfs:label "YesWeHack" ; bb:proposal "P17" ;
+    dcterms:source <https://yeswehack.com/programs/yes-we-hack> ; bb:sourceAccessed "2026-11-04" .
+:Platform_Intigriti a owl:NamedIndividual , :BugBountyPlatform ; rdfs:label "Intigriti" ; bb:proposal "P17" ;
+    dcterms:source <https://kb.intigriti.com/en/articles/3379382-submission-lifecycle> ; bb:sourceAccessed "2026-11-04" .
+:Platform_Immunefi a owl:NamedIndividual , :BugBountyPlatform ; rdfs:label "Immunefi" ; bb:proposal "P17" ;
+    rdfs:comment "Plataforma de bug bounty para Web3 (contratos inteligentes); classificacao de severidade propria (v2.3)." ;
+    dcterms:source <https://immunefi.com/severity-classification-systems/> ; bb:sourceAccessed "2026-11-04" .
+:Platform_Vulbox a owl:NamedIndividual , :BugBountyPlatform ; rdfs:label "Vulbox"@en , "漏洞盒子"@zh ; bb:proposal "P17" ;
+    rdfs:comment "Plataforma chinesa de testes colaborativos (众测) de 斗象科技 (Duoxiang/Tophant), criada em 2014." ;
+    dcterms:source <https://www.secrss.com/articles/8945> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Fonte de imprensa; confirmar na pagina oficial vulbox.com." .
+:Platform_Butian a owl:NamedIndividual , :BugBountyPlatform ; rdfs:label "Butian"@en , "补天"@zh ; bb:proposal "P17" ;
+    rdfs:comment "Plataforma chinesa de resposta a vulnerabilidades (漏洞响应平台), operada pela 奇安信 (Qi An Xin)." ;
+    dcterms:source <https://www.butian.net/> , <https://www.qianxin.com/product/detail/pid/452> ; bb:sourceAccessed "2026-11-04" .
+
+#############################################################################
+# P18. Ligacao com a CWE   ·   P19. subvariantes (NAO adicionadas)
+#############################################################################
+:targetsVulnerability a owl:ObjectProperty ; rdfs:label "visa a fraqueza (CWE)"@pt ; bb:proposal "P18" ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( :Report :BugBountyProgram ) ] ; rdfs:range :Weakness ;
+    rdfs:comment "Classe de fraqueza CWE visada por um relatorio (ou aceite por um programa: significado no nivel do programa em revisao, d-9). NAO e subpropriedade de :relatedWeakness: o dominio :AttackPattern desta no v7 faria do programa/relatorio um :AttackPattern (disjunto), logo a ontologia seria inconsistente." ;
+    dcterms:source <https://link.springer.com/doi/10.1007/978-3-030-30796-7_13> , <https://arxiv.org/pdf/2112.04231> ;
+    bb:sourceAccessed "2026-11-04" .
+# P19 - subvariantes no catalogo CWE 5.0 (cache/catalogs/cwe.json, 2026-10-28), por decisao NAO incluidas:
+#   CWE-79 -> CWE-80, 81, 83, 84, 85, 86, 87 · CWE-89 -> CWE-564 · CWE-639 -> CWE-566
+#   XSS refletido/armazenado/DOM nao sao nos CWE (sao nos do Bugcrowd VRT, ja em bb:vrtNode).
+
+#############################################################################
+# Disjuncoes das classes estruturais novas com os tipos de topo do v7 e do modulo
+#############################################################################
+[] a owl:AllDisjointClasses ; owl:members ( :Incident :ThreatAction :AttackPattern :Asset :SecurityState
+    :Vulnerability :Weakness :DetectionSource :CourseOfAction :Case
+    :BugBountyPlatform :BugBountyProgram :Scope :Reward :Report :Researcher :OWASPCategory
+    :ProgramVisibility :ProgramManagementModel :SeverityRating :VRTPriority :DisclosurePolicy
+    :ReportDisclosureScope :DisclosureTimeline :BountyTable :BountyTableEntry :ResearcherProfile ) .
+[] a owl:AllDisjointClasses ; owl:members ( :ThreatActor
+    :ProgramVisibility :ProgramManagementModel :SeverityRating :VRTPriority :DisclosurePolicy
+    :ReportDisclosureScope :DisclosureTimeline :BountyTable :BountyTableEntry :ResearcherProfile ) .

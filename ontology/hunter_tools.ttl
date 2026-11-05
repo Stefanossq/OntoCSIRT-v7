@@ -1,0 +1,87 @@
+@prefix : <http://www.semanticweb.org/ontocsirt#> .
+@prefix bb: <http://www.semanticweb.org/ontocsirt/bugbounty#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+#############################################################################
+# HunterTools - ferramentas do hunter (propostas P20-P22 aprovadas em 2026-11-04)
+#
+# Compoe-se com OntoCSIRT_v7.ttl + _ext + _evo + ontology/OntoBugBounty.ttl (+ bugbounty_refined.ttl).
+# Sem owl:imports. Mesmo espaco de nomes (:) do v7.
+#
+# Fases (NIST SP 800-115): descoberta de rede (4.1), identificacao de portas e servicos (4.2), varredura
+# de vulnerabilidades. Reconhecimento passivo vs. ativo (MITRE ATT&CK): T1596.005 (Scan Databases:
+# Shodan, Censys) vs. T1595 (Active Scanning: .001 IP blocks, .002 vulnerability scanning).
+# As tres subclasses NAO sao disjuntas: a mesma ferramenta pode ter mais de um papel (o Nuclei consulta
+# Shodan/Censys pelo 'uncover').
+# Nao se reutiliza :uses (range :AttackPattern, disjunto de :HunterTool -> inconsistente): ver :usesTool.
+#############################################################################
+
+<http://www.semanticweb.org/ontocsirt/huntertools> a owl:Ontology ;
+    rdfs:label "HunterTools - ferramentas de reconhecimento, varredura e inteligencia de ameacas do pesquisador" ;
+    owl:versionInfo "ht-1" ;
+    dcterms:created "2026-11-04"^^xsd:date ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> .
+
+bb:proposal a owl:AnnotationProperty .
+bb:sourceAccessed a owl:AnnotationProperty .
+bb:reviewNote a owl:AnnotationProperty .
+bb:attackTechnique a owl:AnnotationProperty ; rdfs:label "tecnica MITRE ATT&CK correspondente"@pt .
+
+# --- P20. classes -----------------------------------------------------------
+:HunterTool a owl:Class ; rdfs:label "Ferramenta do hunter"@pt , "Hunter tool"@en ; bb:proposal "P20" ;
+    rdfs:comment "Ferramenta ou fonte usada no processo de teste (reconhecimento, varredura, inteligencia)." ;
+    dcterms:source <https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-115.pdf> ,
+        <https://www.scitepress.org/Papers/2020/91710/> ;
+    bb:sourceAccessed "2026-11-04" .
+:ReconTool a owl:Class ; rdfs:subClassOf :HunterTool ; rdfs:label "Ferramenta de reconhecimento"@pt , "Recon tool"@en ; bb:proposal "P20" ;
+    rdfs:comment "Reconhecimento passivo: consulta bases de varredura da Internet sem tocar no alvo (ATT&CK T1596.005)." ;
+    dcterms:source <https://attack.mitre.org/techniques/T1596/005/> ; bb:sourceAccessed "2026-11-04" .
+:ScanningTool a owl:Class ; rdfs:subClassOf :HunterTool ; rdfs:label "Ferramenta de varredura"@pt , "Scanning tool"@en ; bb:proposal "P20" ;
+    rdfs:comment "Varredura ativa do alvo: portas e servicos, vulnerabilidades (NIST SP 800-115, 4.2; ATT&CK T1595)." ;
+    dcterms:source <https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-115.pdf> ; bb:sourceAccessed "2026-11-04" .
+:ThreatIntelSource a owl:Class ; rdfs:subClassOf :HunterTool ; rdfs:label "Fonte de inteligencia de ameacas"@pt , "Threat intelligence source"@en ; bb:proposal "P20" ;
+    rdfs:comment "Catalogo ou base que informa sobre vulnerabilidades (existencia, exploracao ativa)." .
+
+[] a owl:AllDisjointClasses ; owl:members ( :HunterTool :Incident :ThreatAction :AttackPattern :Asset :SecurityState
+    :Vulnerability :Weakness :DetectionSource :CourseOfAction :Case :ThreatActor
+    :BugBountyPlatform :BugBountyProgram :Scope :Reward :Report :Researcher :OWASPCategory ) .
+
+# --- P22. propriedades ------------------------------------------------------
+:usesTool a owl:ObjectProperty ; rdfs:label "usa a ferramenta"@pt ; bb:proposal "P22" ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( :Researcher :ThreatActor ) ] ; rdfs:range :HunterTool ;
+    rdfs:comment "Pesquisadores e atores de ameaca usam as mesmas ferramentas; a diferenca e a autorizacao (ver :Researcher)." .
+:discovers a owl:ObjectProperty ; rdfs:label "descobre"@pt ; bb:proposal "P22" ;
+    rdfs:domain :ReconTool ; rdfs:range [ a owl:Class ; owl:unionOf ( :Scope :Asset ) ] .
+:tests a owl:ObjectProperty ; rdfs:label "testa a fraqueza"@pt ; bb:proposal "P22" ;
+    rdfs:domain :ScanningTool ; rdfs:range :Weakness .
+:informs a owl:ObjectProperty ; rdfs:label "informa sobre"@pt ; bb:proposal "P22" ;
+    rdfs:domain :ThreatIntelSource ; rdfs:range :Vulnerability .
+
+# --- P21. individuos --------------------------------------------------------
+:Tool_Shodan a owl:NamedIndividual , :ReconTool ; rdfs:label "Shodan" ; bb:proposal "P21" ;
+    rdfs:comment "'the world's first search engine for Internet-connected devices' (shodan.io)." ;
+    bb:attackTechnique "T1596.005" ;
+    dcterms:source <https://www.shodan.io/> , <https://attack.mitre.org/techniques/T1596/005/> ; bb:sourceAccessed "2026-11-04" .
+:Tool_Censys a owl:NamedIndividual , :ReconTool ; rdfs:label "Censys" ; bb:proposal "P21" ;
+    rdfs:comment "Mapa da Internet (IPs, portas e servicos, certificados, sites, DNS) para exposicao externa e threat hunting." ;
+    bb:attackTechnique "T1596.005" ;
+    dcterms:source <https://www.censys.com/> , <https://attack.mitre.org/techniques/T1596/005/> ; bb:sourceAccessed "2026-11-04" .
+:Tool_Nmap a owl:NamedIndividual , :ScanningTool ; rdfs:label "Nmap" ; bb:proposal "P21" ;
+    rdfs:comment "'Nmap (Network Mapper) is a free and open source utility for network discovery and security auditing' (nmap.org)." ;
+    bb:attackTechnique "T1595.001" ;
+    dcterms:source <https://nmap.org/> ; bb:sourceAccessed "2026-11-04" .
+:Tool_Nuclei a owl:NamedIndividual , :ScanningTool ; rdfs:label "Nuclei" ; bb:proposal "P21" ;
+    rdfs:comment "'A fast and customisable vulnerability scanner powered by simple YAML-based templates' (ProjectDiscovery)." ;
+    bb:attackTechnique "T1595.002" ;
+    dcterms:source <https://docs.projectdiscovery.io/tools/nuclei/overview> ; bb:sourceAccessed "2026-11-04" .
+:TI_CISA_KEV a owl:NamedIndividual , :ThreatIntelSource ; rdfs:label "CISA Known Exploited Vulnerabilities (KEV)" ; bb:proposal "P21" ;
+    rdfs:comment "Catalogo de vulnerabilidades com exploracao conhecida; ja e a fonte dos CVEs do modulo (bb:dataSource). Entrada 'kev' de ontology/refs_v7.bib." ;
+    dcterms:source <https://www.cisa.gov/known-exploited-vulnerabilities-catalog> ; bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "A pagina da CISA devolveu 403 ao acesso automatico em 2026-11-04; citar pela entrada bibliografica existente." .
+:TI_NVD a owl:NamedIndividual , :ThreatIntelSource ; rdfs:label "NIST National Vulnerability Database (NVD)" ; bb:proposal "P21" ;
+    rdfs:comment "Fonte do CVSS e das CWEs dos CVEs do modulo (bb:dataSource). Entrada de ontology/refs_v7.bib (NVD API 2.0)." ;
+    dcterms:source <https://nvd.nist.gov/> ; bb:sourceAccessed "2026-11-04" .
