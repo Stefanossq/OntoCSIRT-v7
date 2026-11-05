@@ -1,0 +1,6 @@
+# Mantem LF em todos os sistemas: o SHA-256 de OntoCSIRT_v7.ttl esta citado no artigo e verificado nos
+# testes; com core.autocrlf=true (padrao do Git para Windows) a copia clonada ganharia CRLF e outro SHA.
+* text=auto eol=lf
+*.pdf binary
+*.zip binary
+*.png binary
