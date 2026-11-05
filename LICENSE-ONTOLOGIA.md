@@ -13,3 +13,4 @@
 | MITRE CWE | `cache/catalogs/cwe.json` | © The MITRE Corporation; termos de uso do CWE |
 | Center for Threat-Informed Defense (KEV → ATT&CK) | `cache/ctid_kev_attack.json` | Apache-2.0 |
 | Bugcrowd Vulnerability Rating Taxonomy | `cache/catalogs/bugcrowd_vrt.json` | Apache-2.0 |
+| VERIS Community Database (VCDB) | `cache/vcdb/`, `data/vcdb/` (derivados) | CC BY-SA 4.0; os derivados mantêm a mesma licença ([`data/vcdb/LICENSE.md`](data/vcdb/LICENSE.md)) |

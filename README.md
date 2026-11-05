@@ -212,6 +212,7 @@ O texto das secções do ciclo de vida está em [`artigo/secoes_ciclo_vida.tex`]
 | Caminho | O que é |
 |---|---|
 | `verificar_ontologia.py` | Verificação rápida para a banca (checklist com 40 itens, cerca de 1 minuto) |
+| `vcdb_pipeline/`, `docs/vcdb/`, `data/vcdb/` | Incidentes reais do VCDB: download versionado, normalização, CVEs, NVD com proveniência, rótulos e fila de revisão humana ([`docs/vcdb/README.md`](docs/vcdb/README.md); dados em CC BY-SA 4.0) |
 | `OntoCSIRT_v7.ttl`, `shapes_v7.ttl`, `ontocsirt_v7.py` | Ontologia, SHACL e avaliação do artigo |
 | `OntoCSIRT_v7_ext.ttl`, `shapes_ingest.ttl`, `ingest_real_cases.py`, `validar_ingestao.py` | Ingestão KEV + CTID + NVD e portão de qualidade |
 | `soar_webhook.py`, `nvd_enricher.py`, `openapi.yaml`, `README_NVD.md` | Webhook SOAR, enriquecimento NVD em tempo real, contrato da API |

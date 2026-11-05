@@ -29,3 +29,6 @@ ontology/*.sty
 Thumbs.db
 .vscode/
 .idea/
+
+# pipeline VCDB: regenerado por `python -m vcdb_pipeline run --offline` (mesmo hash, ver data/vcdb/manifest.json)
+data/vcdb/vcdb_canonical.jsonl

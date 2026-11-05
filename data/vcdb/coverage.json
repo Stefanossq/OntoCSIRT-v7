@@ -1,0 +1,337 @@
+{
+ "cves": {
+  "distinct_cve_sets": 20,
+  "distinct_cves": 31,
+  "incidents_with_structured_cve": 926,
+  "incidents_with_text_only_mentions": 4,
+  "top_cve_sets": [
+   {
+    "cves": [
+     "CVE-2023-34362",
+     "CVE-2023-35036",
+     "CVE-2023-35708"
+    ],
+    "incidents": 747
+   },
+   {
+    "cves": [
+     "CVE-2008-4250",
+     "CVE-2009-3129",
+     "CVE-2010-3333",
+     "CVE-2011-3544",
+     "CVE-2012-0158"
+    ],
+    "incidents": 88
+   },
+   {
+    "cves": [
+     "CVE-2013-0640",
+     "CVE-2013-0641"
+    ],
+    "incidents": 60
+   },
+   {
+    "cves": [
+     "CVE-2010-0249"
+    ],
+    "incidents": 11
+   },
+   {
+    "cves": [
+     "CVE-2014-0160"
+    ],
+    "incidents": 2
+   },
+   {
+    "cves": [
+     "CVE-2017-5638"
+    ],
+    "incidents": 2
+   },
+   {
+    "cves": [
+     "CVE-2013-1347",
+     "CVE-2013-1493",
+     "CVE-2013-2423"
+    ],
+    "incidents": 2
+   },
+   {
+    "cves": [
+     "CVE-2019-19781"
+    ],
+    "incidents": 2
+   },
+   {
+    "cves": [
+     "CVE-2012-0507"
+    ],
+    "incidents": 1
+   },
+   {
+    "cves": [
+     "CVE-2012-4681",
+     "CVE-2013-2423"
+    ],
+    "incidents": 1
+   }
+  ]
+ },
+ "distributions": {
+  "analysis_status": {
+   "Finalized": 2595,
+   "First pass": 4982,
+   "Ineligible": 4,
+   "None": 306,
+   "Ready for review": 51,
+   "Reviewed": 2109
+  },
+  "credit_monitoring (D4, sem regra de rotulo)": {
+   "No": 140,
+   "None": 5119,
+   "Unknown": 4209,
+   "Yes": 579
+  },
+  "schema_version": {
+   "1.3.5": 2,
+   "1.3.6": 1,
+   "1.3.7": 26,
+   "1.4.0": 9907,
+   "1.4.1": 111
+  },
+  "security_incident": {
+   "Confirmed": 9966,
+   "Near miss": 8,
+   "Suspected": 73
+  },
+  "sub_source (vies de amostragem [S4])": {
+   "None": 8110,
+   "covid19": 25,
+   "phidbr": 1310,
+   "priority": 602
+  }
+ },
+ "field_fill": {
+  "action_categories": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "action_varieties": {
+   "filled": 9815,
+   "pct": 97.69
+  },
+  "action_vectors": {
+   "filled": 9806,
+   "pct": 97.6
+  },
+  "actor_categories": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "actor_varieties": {
+   "filled": 9534,
+   "pct": 94.89
+  },
+  "analysis_status": {
+   "filled": 9741,
+   "pct": 96.95
+  },
+  "asset_classes": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "asset_varieties": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "attributes": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "campaign_id": {
+   "filled": 192,
+   "pct": 1.91
+  },
+  "confidence": {
+   "filled": 2818,
+   "pct": 28.05
+  },
+  "credit_monitoring": {
+   "filled": 4928,
+   "pct": 49.05
+  },
+  "cve_mentions_text": {
+   "filled": 5,
+   "pct": 0.05
+  },
+  "cve_raw": {
+   "filled": 932,
+   "pct": 9.28
+  },
+  "cves": {
+   "filled": 926,
+   "pct": 9.22
+  },
+  "data_disclosure": {
+   "filled": 9372,
+   "pct": 93.28
+  },
+  "day": {
+   "filled": 4398,
+   "pct": 43.77
+  },
+  "discovery": {
+   "filled": 5575,
+   "pct": 55.49
+  },
+  "incident_id": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "industry_naics": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "month": {
+   "filled": 7157,
+   "pct": 71.24
+  },
+  "record_key": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "reference": {
+   "filled": 9564,
+   "pct": 95.19
+  },
+  "schema_version": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "security_incident": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "sub_source": {
+   "filled": 1937,
+   "pct": 19.28
+  },
+  "summary": {
+   "filled": 9528,
+   "pct": 94.83
+  },
+  "victim_country": {
+   "filled": 10047,
+   "pct": 100.0
+  },
+  "year": {
+   "filled": 10047,
+   "pct": 100.0
+  }
+ },
+ "kev_vs_tags (D5, so medida)": [
+  {
+   "cisaRequiredAction": "Apply updates per vendor instructions.",
+   "cves": 1,
+   "label": "mitigation"
+  },
+  {
+   "cisaRequiredAction": "(fora do KEV)",
+   "cves": 3,
+   "label": "none_tagged"
+  },
+  {
+   "cisaRequiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+   "cves": 1,
+   "label": "none_tagged"
+  },
+  {
+   "cisaRequiredAction": "Apply updates per vendor instructions.",
+   "cves": 10,
+   "label": "none_tagged"
+  },
+  {
+   "cisaRequiredAction": "(fora do KEV)",
+   "cves": 1,
+   "label": "patch"
+  },
+  {
+   "cisaRequiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+   "cves": 2,
+   "label": "patch"
+  },
+  {
+   "cisaRequiredAction": "Apply updates per vendor instructions.",
+   "cves": 10,
+   "label": "patch"
+  },
+  {
+   "cisaRequiredAction": "(fora do KEV)",
+   "cves": 1,
+   "label": "review:TAG_BOTH"
+  },
+  {
+   "cisaRequiredAction": "Apply updates per vendor instructions.",
+   "cves": 2,
+   "label": "review:TAG_BOTH"
+  }
+ ],
+ "keys": {
+  "distinct_record_keys": 10044,
+  "dup_incident_id_records": 67
+ },
+ "labels_per_cve": {
+  "mitigation": 1,
+  "none_tagged": 14,
+  "patch": 13,
+  "review:TAG_BOTH": 3
+ },
+ "labels_per_incident": {
+  "auto/mitigation": 1,
+  "auto/none_tagged": 67,
+  "auto/patch": 106,
+  "no_cve/None": 9121,
+  "review/None": 752
+ },
+ "nvd": {
+  "fetched": 31,
+  "from_cache": 0,
+  "missing": [],
+  "requests": 1,
+  "schema_errors": 0
+ },
+ "records": 10047,
+ "review_queue": {
+  "by_reason": {
+   "CVE_FIELD_NO_ID": 6,
+   "CVE_ONLY_IN_TEXT": 4,
+   "CVE_SET_DISAGREES": 750,
+   "DUP_MASTER_ID": 6,
+   "TAG_BOTH": 751
+  },
+  "items": 1517,
+  "records": 765
+ },
+ "schema_check_vcdb_merged": {
+  "examples": {
+   "00088c89-7f61-40c9-ab3a-f725e33c1176": [
+    "plus/attribute/confidentiality: Additional properties are not allowed ('partner_data' was unexpected)"
+   ],
+   "004a9681-f5bb-4c26-9972-97969fcdf2b0": [
+    "plus/attack_difficulty_initial: 'Not Applicable' is not one of ['High', 'Moderate', 'Low', 'Very Low', 'NA', 'Unknown', 'Other']",
+    "plus/attack_difficulty_legacy: 'Not Applicable' is not one of ['High', 'Moderate', 'Low', 'Very Low', 'NA', 'Unknown', 'Other']",
+    "plus/attack_difficulty_subsequent: 'Not Applicable' is not one of ['High', 'Moderate', 'Low', 'Very Low', 'NA', 'Unknown', 'Other']"
+   ],
+   "03a7e42b-3a0e-450b-9e52-7200952aa22a": [
+    "plus/attribute/confidentiality: Additional properties are not allowed ('partner_data' was unexpected)"
+   ],
+   "092f5317-e771-4aa0-98b8-1a5b0c0841c7": [
+    "plus/attribute/confidentiality: Additional properties are not allowed ('partner_data' was unexpected)"
+   ],
+   "0DF5FC98-ADDB-48BF-8104-D20188692336": [
+    "asset/assets/3/variety: 'S - Remote access' is not one of ['M - Disk drive', 'M - Disk media', 'M - Documents', 'M - Flash drive', 'M - Payment card', 'M - Smart card', 'M - SIM card',"
+   ]
+  },
+  "failing_records": 104
+ }
+}
