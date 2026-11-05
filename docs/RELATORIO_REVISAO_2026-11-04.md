@@ -88,6 +88,14 @@ A ressalva de E é uma limitação conhecida do Owlready2 0.46: o leitor da saí
 | D7 | `verificar_ontologia.py` no contentor | ✅ 40/40 |
 | D8 | Suíte pytest no contentor (Linux, com o teste POSIX que no Windows é ignorado) | ✅ **108 passaram, 0 ignorados, 0 falhas** em 7 min 56 s |
 
+### 1.6c Repositório publicado (https://github.com/Stefanossq/OntoCSIRT-v7)
+| # | Verificação | Resultado |
+|---|---|---|
+| G1 | Clone limpo no Windows com `core.autocrlf=true` e `verificar_ontologia.py` | ❌ na primeira tentativa: o Git converteu `OntoCSIRT_v7.ttl` para CRLF e o SHA-256 deixou de bater. Corrigido com `.gitattributes` (`eol=lf`); repetido, ✅ 40/40, SHA `8c2fc5f00fae…`, `backup/SHA256SUMS.txt` OK, `test_v7_regression.py` 7/7 |
+| G2 | GitHub Actions, job "Ontologia e suíte pytest" (Ubuntu, Python 3.12, Java 17) | ✅ verificação 40/40; pytest 108 passaram |
+| G3 | GitHub Actions, job "Imagem Docker e webhook" | ✅ imagem, `/health`, 401 sem token, alerta 200; pytest no contentor 108 passaram |
+| G4 | Nenhum segredo, `.env`, e-mail pessoal ou caminho local nos ficheiros publicados | ✅ (o e-mail só aparece no `.tex` do artigo); os commits usam o endereço `noreply` do GitHub |
+
 ### 1.7 Suíte automática do projeto
 | # | Verificação | Resultado |
 |---|---|---|
