@@ -5,6 +5,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 #############################################################################
 # OntoBugBounty - LAPIDACAO (bb-2): propostas P1-P19 aprovadas em 2026-11-04
@@ -41,6 +42,7 @@ bb:proposal a owl:AnnotationProperty ; rdfs:label "proposta de lapidacao (P1-P22
 bb:sourceAccessed a owl:AnnotationProperty ; rdfs:label "data de acesso a fonte"@pt .
 bb:reviewNote a owl:AnnotationProperty ; rdfs:label "nota de revisao humana pendente"@pt .
 bb:cvssRange a owl:AnnotationProperty ; rdfs:label "faixa CVSS do nivel"@pt .
+skos:altLabel a owl:AnnotationProperty .   # sinonimos (um so rdfs:label por lingua)
 
 #############################################################################
 # P1. Visibilidade do programa (publico / privado)
@@ -207,7 +209,7 @@ bb:cvssRange a owl:AnnotationProperty ; rdfs:label "faixa CVSS do nivel"@pt .
     owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Severity_None :Severity_Low :Severity_Medium :Severity_High :Severity_Critical ) ] ;
     dcterms:source <https://www.first.org/cvss/v4.0/specification-document> , <https://docs.hackerone.com/organizations/bounty-tables.html> ;
     bb:sourceAccessed "2026-11-04" .
-:Severity_None a owl:NamedIndividual , :SeverityRating ; rdfs:label "None"@en , "Info"@en , "Nenhuma"@pt ; bb:cvssRange "0.0" .
+:Severity_None a owl:NamedIndividual , :SeverityRating ; rdfs:label "None"@en , "Nenhuma"@pt ; skos:altLabel "Info"@en ; bb:cvssRange "0.0" .
 :Severity_Low a owl:NamedIndividual , :SeverityRating ; rdfs:label "Low"@en , "Baixa"@pt ; bb:cvssRange "0.1-3.9" .
 :Severity_Medium a owl:NamedIndividual , :SeverityRating ; rdfs:label "Medium"@en , "Media"@pt ; bb:cvssRange "4.0-6.9" .
 :Severity_High a owl:NamedIndividual , :SeverityRating ; rdfs:label "High"@en , "Alta"@pt ; bb:cvssRange "7.0-8.9" .
@@ -236,7 +238,7 @@ bb:cvssRange a owl:AnnotationProperty ; rdfs:label "faixa CVSS do nivel"@pt .
     rdfs:comment "HackerOne: 'The bounties in the table are categorized based on the severity of the issue identified'." ;
     dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
     bb:sourceAccessed "2026-11-04" .
-:BountyTableEntry a owl:Class ; rdfs:label "Linha da tabela de recompensas"@pt , "Bounty table entry"@en , "Reward range"@en ; bb:proposal "P8" ;
+:BountyTableEntry a owl:Class ; rdfs:label "Linha da tabela de recompensas"@pt , "Bounty table entry"@en ; skos:altLabel "Reward range"@en ; bb:proposal "P8" ;
     rdfs:comment "E o RewardRange (min, max, moeda) de uma severidade. As propriedades :hasMinBounty/:hasMaxBounty do programa ficam (faixa global)." ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :forSeverity ;
         owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :SeverityRating ] .
@@ -401,3 +403,118 @@ bb:cvssRange a owl:AnnotationProperty ; rdfs:label "faixa CVSS do nivel"@pt .
 [] a owl:AllDisjointClasses ; owl:members ( :ThreatActor
     :ProgramVisibility :ProgramManagementModel :SeverityRating :VRTPriority :DisclosurePolicy
     :ReportDisclosureScope :DisclosureTimeline :BountyTable :BountyTableEntry :ResearcherProfile ) .
+
+#############################################################################
+# Rastreabilidade por termo (revisao de 2026-11-06)
+# Cada classe/propriedade recebe a fonte do grupo da sua proposta (o termo principal de cada proposta, acima,
+# ja a tinha); cada individuo recebe o numero da proposta. Sem axiomas logicos novos neste bloco.
+#############################################################################
+:AIModelScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:BountyTableEntry dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:CoordinatedDisclosure bb:proposal "P10" .
+:DisclosureTimeline dcterms:source <https://hackerone.com/disclosure-guidelines> , <https://projectzero.google/vulnerability-disclosure-policy.html> , <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:DuplicateReport dcterms:source <https://docs.bugcrowd.com/customers/submission-management/submission-status> , <https://docs.hackerone.com/hackers/report-states.html> , <https://kb.intigriti.com/en/articles/5191201-handling-submissions> ;
+    bb:sourceAccessed "2026-11-04" .
+:ExecutableScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:FullDisclosure bb:proposal "P10" .
+:FullReportDisclosure bb:proposal "P11" .
+:HardwareScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:LimitedReportDisclosure bb:proposal "P11" .
+:ManagedProgram dcterms:source <https://www.bugcrowd.com/glossary/bug-bounty-program-bbp/> , <https://www.intigriti.com/blog/business-insights/bug-bounty-diy-the-pros-and-cons-of-managing-vulnerability-disclosure-in-house> ;
+    bb:sourceAccessed "2026-11-04" .
+:Management_Managed bb:proposal "P2" .
+:Management_SelfManaged bb:proposal "P2" .
+:MobileAppScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:NetworkScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:NonDisclosure bb:proposal "P10" .
+:OriginalReport dcterms:source <https://docs.bugcrowd.com/customers/submission-management/submission-status> , <https://docs.hackerone.com/hackers/report-states.html> , <https://kb.intigriti.com/en/articles/5191201-handling-submissions> ;
+    bb:sourceAccessed "2026-11-04" .
+:OutOfScopeItem dcterms:source <https://docs.hackerone.com/en/articles/8593105-asset-details-and-scoping> ;
+    bb:sourceAccessed "2026-11-04" .
+:Priority_P1 bb:proposal "P9b" .
+:Priority_P2 bb:proposal "P9b" .
+:Priority_P3 bb:proposal "P9b" .
+:Priority_P4 bb:proposal "P9b" .
+:Priority_P5 bb:proposal "P9b" .
+:PrivateProgram dcterms:source <https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-15/documents/723920/539484723838229-service-definition-document-2025-12-15-1335.pdf> , <https://docs.hackerone.com/en/articles/8368948-private-vs-public-programs> ;
+    bb:sourceAccessed "2026-11-04" .
+:PublicProgram dcterms:source <https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-15/documents/723920/539484723838229-service-definition-document-2025-12-15-1335.pdf> , <https://docs.hackerone.com/en/articles/8368948-private-vs-public-programs> ;
+    bb:sourceAccessed "2026-11-04" .
+:SelfManagedProgram dcterms:source <https://www.bugcrowd.com/glossary/bug-bounty-program-bbp/> , <https://www.intigriti.com/blog/business-insights/bug-bounty-diy-the-pros-and-cons-of-managing-vulnerability-disclosure-in-house> ;
+    bb:sourceAccessed "2026-11-04" .
+:Severity_Critical bb:proposal "P9" .
+:Severity_High bb:proposal "P9" .
+:Severity_Low bb:proposal "P9" .
+:Severity_Medium bb:proposal "P9" .
+:Severity_None bb:proposal "P9" .
+:SmartContractScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:SoloReport dcterms:source <https://docs.hackerone.com/en/articles/8457618-collaboration> , <https://www.intigriti.com/blog/product-updates/introducing-report-collaboration-split-these-bounties> ;
+    bb:sourceAccessed "2026-11-04" .
+:SourceCodeScope dcterms:source <https://docs.anysite.io/api-reference/hackerone/hackeroneprogramsscopes> , <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" ;
+    bb:reviewNote "Literais do enum asset_type confirmados so em fonte secundaria (anysite.io)." .
+:SpecificScope dcterms:source <https://docs.hackerone.com/organizations/asset-types.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:Timeline_CERTCC bb:proposal "P12" .
+:Timeline_HackerOneDefault bb:proposal "P12" .
+:Timeline_ProjectZero bb:proposal "P12" .
+:Visibility_Private bb:proposal "P1" .
+:Visibility_Public bb:proposal "P1" .
+:daysToDisclosure dcterms:source <https://hackerone.com/disclosure-guidelines> , <https://projectzero.google/vulnerability-disclosure-policy.html> , <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:entryCurrency dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:entryMaxAmount dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:entryMinAmount dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:forPriority dcterms:source <https://docs.bugcrowd.com/researchers/receiving-rewards/getting-rewarded/> ;
+    bb:sourceAccessed "2026-11-04" .
+:forSeverity dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasBountyTable dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasDisclosurePolicy dcterms:source <https://certcc.github.io/CERT-Guide-to-CVD/tutorials/terms/cvd> , <https://committee.iso.org/standard/72311.html> , <https://docs.hackerone.com/organizations/disclosure.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasDisclosureTimeline dcterms:source <https://hackerone.com/disclosure-guidelines> , <https://projectzero.google/vulnerability-disclosure-policy.html> , <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasEntry dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.bugcrowd.com/blog/setting-up-your-program-reward-ranges/> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasManagementModel dcterms:source <https://www.bugcrowd.com/glossary/bug-bounty-program-bbp/> , <https://www.intigriti.com/blog/business-insights/bug-bounty-diy-the-pros-and-cons-of-managing-vulnerability-disclosure-in-house> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasProfile dcterms:source <https://docs.bugcrowd.com/researchers/managing-account/performance-metrics/rank> , <https://docs.hackerone.com/hackers/reputation.html> , <https://docs.hackerone.com/hackers/signal-and-impact.html> , <https://kb.intigriti.com/en/articles/3379630-leaderboard-reputation-and-streak> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasReportDisclosureScope dcterms:source <https://docs.hackerone.com/hackers/disclosure.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasSeverityRating dcterms:source <https://docs.hackerone.com/organizations/bounty-tables.html> , <https://www.first.org/cvss/v4.0/specification-document> ;
+    bb:sourceAccessed "2026-11-04" .
+:hasVisibility dcterms:source <https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-15/documents/723920/539484723838229-service-definition-document-2025-12-15-1335.pdf> , <https://docs.hackerone.com/en/articles/8368948-private-vs-public-programs> ;
+    bb:sourceAccessed "2026-11-04" .
+:impact dcterms:source <https://docs.hackerone.com/hackers/signal-and-impact.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:inTheWildDays dcterms:source <https://hackerone.com/disclosure-guidelines> , <https://projectzero.google/vulnerability-disclosure-policy.html> , <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:onPlatform dcterms:source <https://docs.bugcrowd.com/researchers/managing-account/performance-metrics/rank> , <https://docs.hackerone.com/hackers/reputation.html> , <https://docs.hackerone.com/hackers/signal-and-impact.html> , <https://kb.intigriti.com/en/articles/3379630-leaderboard-reputation-and-streak> ;
+    bb:sourceAccessed "2026-11-04" .
+:postPatchDays dcterms:source <https://hackerone.com/disclosure-guidelines> , <https://projectzero.google/vulnerability-disclosure-policy.html> , <https://securityaffairs.com/116921/security/project-zero-updates-vulnerability-disclosure-policy.html> ;
+    bb:sourceAccessed "2026-11-04" .
+:reputationPoints dcterms:source <https://docs.bugcrowd.com/researchers/managing-account/performance-metrics/rank> , <https://docs.hackerone.com/hackers/reputation.html> , <https://docs.hackerone.com/hackers/signal-and-impact.html> , <https://kb.intigriti.com/en/articles/3379630-leaderboard-reputation-and-streak> ;
+    bb:sourceAccessed "2026-11-04" .
+:rewardKind dcterms:source <https://docs.bugcrowd.com/researchers/receiving-rewards/getting-rewarded/> , <https://www.hackerone.com/hackers/how-to-start-hacking> ;
+    bb:sourceAccessed "2026-11-04" .
+:signal dcterms:source <https://docs.hackerone.com/hackers/signal-and-impact.html> ;
+    bb:sourceAccessed "2026-11-04" .

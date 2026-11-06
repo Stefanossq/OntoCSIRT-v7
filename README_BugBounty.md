@@ -5,10 +5,13 @@ Módulo complementar da OntoCSIRT v7 para programas de bug bounty, escopo, recom
 | Ficheiro | O que é |
 |---|---|
 | [`ontology/OntoBugBounty.ttl`](ontology/OntoBugBounty.ttl) | TBox + ABox. O bloco de referência no fim (OWASP, CVEs, VRT) é **gerado** por `ingest_bugbounty.py catalog` |
+| [`ontology/bugbounty_refined.ttl`](ontology/bugbounty_refined.ttl) | Lapidação **bb-2** (P1–P19): visibilidade e gestão do programa, escopo, recompensa, severidade CVSS, divulgação, duplicatas, chapéus, reputação, plataformas, ligação à CWE. Só adiciona ao bb-1 |
+| [`ontology/hunter_tools.ttl`](ontology/hunter_tools.ttl) | Ferramentas do hunter (P20–P22): reconhecimento, varredura, inteligência de ameaças |
 | [`ontology/shapes_bugbounty.ttl`](ontology/shapes_bugbounty.ttl) | Restrições SHACL do módulo (aplicadas junto com as do v7) |
 | `ontology/OntoBugBounty_data.ttl` | Programas e escopos reais da HackerOne, gerado por `ingest_bugbounty.py hackerone` (não existe até à primeira execução com credenciais) |
 | [`ingest_bugbounty.py`](ingest_bugbounty.py) | `hackerone`, `catalog`, `validate` |
 | `tests/test_bugbounty.py`, `tests/test_bugbounty_ingest.py` | Coesão com o v7, regras, SHACL, cliente HackerOne (sem rede) |
+| `tests/test_bugbounty_refined.py` | bb-2 e ferramentas do hunter: rastreabilidade das fontes, classificação automática, defeitos recusados pelo HermiT |
 
 ## Como o módulo se conecta à OntoCSIRT v7
 
@@ -146,6 +149,25 @@ O que o script faz:
 | **Bugcrowd — API** (`api.bugcrowd.com`, token da organização, v1.1.0 de maio de 2026) | Não integrado. É a API do *dono* do programa (programas, alvos e submissões da própria organização) e não lista programas públicos. Seria a fonte natural de `:Report` para quem administra um programa; sem credenciais não foi possível verificar o esquema atual |
 | **OWASP** | Sem API. **Integrado** pelas vistas OWASP do catálogo CWE (MITRE), que é a forma oficial e legível por máquina do mapeamento |
 | **Hack The Box** | Não integrado. Não tem API documentada oficialmente (só coleções da comunidade), e o conteúdo são laboratórios de treino, não programas de bug bounty |
+
+## Lapidação bb-2 e ferramentas do hunter
+
+`ingest_bugbounty.compose()` e `verificar_ontologia.py` carregam, por esta ordem: `OntoBugBounty.ttl` (bb-1), `bugbounty_refined.ttl` (bb-2) e `hunter_tools.ttl`. O bb-1 não foi alterado. O bb-2 só lhe acrescenta axiomas: `:eligibleForSubmission` e `:scopeType` passam a funcionais, `:BugBountyProgram` passa a ter `hasVisibility exactly 1`, e alguns termos ganham anotações.
+
+O que o bb-2 acrescenta:
+- **Programa:** público/privado (disjuntos, `exactly 1`), managed/self-managed, política de divulgação (coordenada, completa, nenhuma) e prazos (HackerOne, Project Zero, CERT/CC).
+- **Escopo:** dentro/fora (`InScopeItem`/`OutOfScopeItem`), tipos de ativo (web, móvel, rede, hardware, código-fonte, executável, contrato inteligente, modelo de IA) e curinga/específico. Os escopos existentes são classificados sozinhos pelo raciocinador.
+- **Recompensa:** monetária/não monetária e tabela de recompensas por severidade (`BountyTableEntry`, que é a faixa min–max–moeda).
+- **Severidade:** os cinco níveis qualitativos do CVSS (None/Info, Low, Medium, High, Critical) e as prioridades P1–P5 do Bugcrowd VRT.
+- **Relatório:** individual/colaborativo, original/duplicata (`duplicateOf`: funcional, irreflexiva, assimétrica) e abrangência da divulgação (HackerOne).
+- **Pesquisador:** `WhiteHat` (disjunta de `GrayHat` e `BlackHat`) e perfil de reputação por plataforma (reputação, Signal, Impact).
+- **Plataformas:** YesWeHack, Intigriti, Immunefi, Vulbox (漏洞盒子) e Butian (补天).
+- **Ligação à CWE:** `targetsVulnerability` (relatório ou programa → `:Weakness`). Não é subpropriedade de `:relatedWeakness`, porque o domínio `:AttackPattern` desta tornaria a ontologia inconsistente.
+- **Ferramentas do hunter:** `ReconTool` (Shodan, Censys; ATT&CK T1596.005), `ScanningTool` (Nmap, Nuclei; T1595) e `ThreatIntelSource` (CISA KEV, NVD), com `usesTool`, `discovers`, `tests` e `informs`.
+
+Cada classe e propriedade tem `dcterms:source` e data de acesso, e cada termo tem `bb:proposal` (P1–P22). Os pontos que dependem de fonte secundária ou de decisão humana estão marcados com `bb:reviewNote`. A proposta, com as fontes e os itens em revisão, está em [`docs/bugbounty_lapidacao_passo0-1.md`](docs/bugbounty_lapidacao_passo0-1.md). As mudanças e a validação estão em [`docs/bugbounty_refined_relatorio.md`](docs/bugbounty_refined_relatorio.md).
+
+**Atenção à disjunção `WhiteHat` / `GrayHat`:** a mesma pessoa continua a poder ser `:Researcher` e `:ThreatActor`, mas já não pode ser declarada `WhiteHat` e `GrayHat` ao mesmo tempo.
 
 ## Validação e testes
 

@@ -49,6 +49,10 @@ bb:attackTechnique a owl:AnnotationProperty ; rdfs:label "tecnica MITRE ATT&CK c
 [] a owl:AllDisjointClasses ; owl:members ( :HunterTool :Incident :ThreatAction :AttackPattern :Asset :SecurityState
     :Vulnerability :Weakness :DetectionSource :CourseOfAction :Case :ThreatActor
     :BugBountyPlatform :BugBountyProgram :Scope :Reward :Report :Researcher :OWASPCategory ) .
+# Disjuncao com as classes de valor/estrutura da lapidacao bb-2 (bugbounty_refined.ttl, carregado antes em compose()).
+[] a owl:AllDisjointClasses ; owl:members ( :HunterTool :ProgramVisibility :ProgramManagementModel :SeverityRating
+    :VRTPriority :DisclosurePolicy :ReportDisclosureScope :DisclosureTimeline :BountyTable :BountyTableEntry
+    :ResearcherProfile ) .
 
 # --- P22. propriedades ------------------------------------------------------
 :usesTool a owl:ObjectProperty ; rdfs:label "usa a ferramenta"@pt ; bb:proposal "P22" ;
@@ -85,3 +89,18 @@ bb:attackTechnique a owl:AnnotationProperty ; rdfs:label "tecnica MITRE ATT&CK c
 :TI_NVD a owl:NamedIndividual , :ThreatIntelSource ; rdfs:label "NIST National Vulnerability Database (NVD)" ; bb:proposal "P21" ;
     rdfs:comment "Fonte do CVSS e das CWEs dos CVEs do modulo (bb:dataSource). Entrada de ontology/refs_v7.bib (NVD API 2.0)." ;
     dcterms:source <https://nvd.nist.gov/> ; bb:sourceAccessed "2026-11-04" .
+
+#############################################################################
+# Rastreabilidade por termo (revisao de 2026-11-06): fonte de cada classe/propriedade sem dcterms:source.
+# Sem axiomas logicos novos neste bloco.
+#############################################################################
+:ThreatIntelSource dcterms:source <https://www.cisa.gov/known-exploited-vulnerabilities-catalog> , <https://nvd.nist.gov/> ;
+    bb:sourceAccessed "2026-11-04" .
+:informs dcterms:source <https://www.cisa.gov/known-exploited-vulnerabilities-catalog> , <https://nvd.nist.gov/> ;
+    bb:sourceAccessed "2026-11-04" .
+:discovers dcterms:source <https://attack.mitre.org/techniques/T1596/005/> ;
+    bb:sourceAccessed "2026-11-04" .
+:tests dcterms:source <https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-115.pdf> ;
+    bb:sourceAccessed "2026-11-04" .
+:usesTool dcterms:source <https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-115.pdf> , <https://www.scitepress.org/Papers/2020/91710/> ;
+    bb:sourceAccessed "2026-11-04" .

@@ -13,7 +13,7 @@ Só há dois ficheiros novos. Nenhum ficheiro existente foi alterado (`OntoBugBo
 ?? ontology/hunter_tools.ttl        (162 triplas)   P20–P22
 ```
 
-Os dois ficheiros compõem-se depois de `OntoBugBounty.ttl`, sem `owl:imports`. **Ainda não estão ligados** a `ingest_bugbounty.compose()` nem a `verificar_ontologia.py`. Ligá-los é uma alteração de código e fica para tua decisão.
+Os dois ficheiros compõem-se depois de `OntoBugBounty.ttl`, sem `owl:imports`. Desde a revisão de 2026-11-06 estão ligados a `ingest_bugbounty.compose()` e a `verificar_ontologia.py` (ver "Revisão para entrega", no fim).
 
 ## Resultados do raciocinador
 
@@ -50,7 +50,7 @@ Os dois ficheiros compõem-se depois de `OntoBugBounty.ttl`, sem `owl:imports`. 
 - **Testes positivos** (consistentes): relatório colaborativo; programa com visibilidade, gestão, política e prazos; relatório → CWE-89; pesquisador usa Nuclei e Shodan descobre escopo.
 - **Suíte existente** (`python -m pytest -q tests`): ver secção final.
 
-Scripts de validação (fora do repositório): `C:\Users\Pichau\AppData\Local\Temp\claude\024964b2542eafd2\1431c545-ff0a-41ef-a351-ccb21abe8d51\scratchpad\validate_refined.py`, `realize2.py`, `realize3.py`.
+Estas verificações estão agora no repositório, em `tests/test_bugbounty_refined.py` (ver "Revisão para entrega").
 
 ## Termos adicionados
 
@@ -98,7 +98,7 @@ Itens d-1 a d-13 da proposta. No ficheiro, cada um está marcado com `bb:reviewN
 
 1. **Disjunção White/Gray/Black (d-8):** implementada como aprovaste. Consequência: um mesmo indivíduo não pode ser `WhiteHat` e `GrayHat` (verificado). O comentário de `:Researcher` no bb-1 ainda diz que a mesma pessoa pode ter os dois papéis. Isso continua válido para `Researcher`/`ThreatActor`, mas já não para `WhiteHat`/`GrayHat`.
 2. **`BountyTableEntry ⊑ =1 forSeverity`:** é exatamente o que aprovaste. Nas tabelas da Bugcrowd, indexadas por prioridade, a linha fica sem severidade conhecida, o que o mundo aberto tolera.
-3. **Integração no carregador:** ainda falta adicionar os dois ficheiros a `ingest_bugbounty.compose()` e `verificar_ontologia.py`. A ingestão da HackerOne também poderia gravar `hasVisibility` (P1). São alterações de código ainda não feitas.
+3. **Integração no carregador:** feita na revisão de 2026-11-06. Continua por fazer que a ingestão da HackerOne grave `hasVisibility` (P1); é uma alteração opcional ao código de ingestão.
 
 ## Suíte de testes existente
 
@@ -106,3 +106,29 @@ Itens d-1 a d-13 da proposta. No ficheiro, cada um está marcado com `bb:reviewN
 Atenção: a suíte não carrega os ficheiros novos, porque estes ainda não estão em `compose()`. Ela só prova que nada existente foi quebrado. A cobertura dos ficheiros novos vem da validação descrita acima.
 
 Nota: durante a sessão, o HEAD avançou para `5f8cf59` (commit do pipeline VCDB, feito fora desta sessão). Esse commit não toca em `ontology/`, no v7, em `ingest_bugbounty.py` nem nos testes de bug bounty.
+
+## Revisão para entrega (2026-11-06)
+
+Corrigido no branch `bugbounty-lapidacao-bb2`:
+1. **Ligação:** `ingest_bugbounty.compose()` (constantes `REFINED` e `HUNTER`) e `verificar_ontologia.py` (composição "modulo OntoBugBounty") carregam os dois ficheiros.
+2. **Testes no repositório:** `tests/test_bugbounty_refined.py`, com 24 testes:
+   - os ficheiros carregados pelo `compose()`;
+   - HermiT consistente e 0 classes insatisfatíveis;
+   - fonte, proposta e rótulo em cada termo;
+   - no máximo um `rdfs:label` por língua;
+   - nenhum termo do bb-1 redefinido;
+   - classificação automática dos escopos, da recompensa, do relatório colaborativo e da duplicata;
+   - 11 defeitos recusados pelo HermiT (os 10 anteriores e `HunterTool` disjunta de `SeverityRating`);
+   - 4 usos válidos que se mantêm consistentes.
+3. **Rastreabilidade:** cada classe/propriedade passa a ter `dcterms:source` e `bb:sourceAccessed`, e cada termo `bb:proposal`. Foi acrescentado um bloco no fim de cada TTL, sem axiomas lógicos novos. `signal`/`impact` citam só a HackerOne; `ThreatIntelSource`/`informs` citam o KEV e o NVD.
+4. **Rótulos:** "Info" (`Severity_None`) e "Reward range" (`BountyTableEntry`) passam a `skos:altLabel`.
+5. **Disjunção:** `HunterTool` passa a ser disjunta das classes de valor do bb-2.
+6. **Documentação:** secção bb-2 no `README_BugBounty.md`; contagem de testes no `README.md` e no `verificar_ontologia.py` (estava em 108); nota do nmap.org na proposta.
+
+Resultados:
+- `python -m pytest -q tests`: **163 passed, 1 skipped** (7 min 35 s);
+- `python verificar_ontologia.py`: **TUDO OK, 42/42**, incluindo HermiT, Pellet e SHACL do módulo com os ficheiros novos e as CQ1–CQ8.
+
+Em aberto (não bloqueiam a entrega, mas devem ser declarados):
+- os itens d-1 a d-13 da proposta (decisões humanas e fontes secundárias, marcados com `bb:reviewNote`);
+- a gravação de `hasVisibility` pela ingestão HackerOne.

@@ -11,7 +11,7 @@ Verifica, por esta ordem:
      (base do artigo; + extensao e evolucao; dados reais; producao com os dados adquiridos; modulo de bug bounty);
   4. as 8 questoes de competencia do artigo sobre a base inferida pelo Pellet;
   5. o portao de qualidade recusa defeitos injetados (SHACL, HermiT e Pellet).
-A suite completa (108 testes, ~7 min) continua a ser `python -m pytest -q tests`.
+A suite completa (164 testes, ~8 min) continua a ser `python -m pytest -q tests`.
 """
 import argparse
 import glob
@@ -83,7 +83,8 @@ def main():
         ("dados reais (KEV/NVD/ATT&CK)", union(base, ext, evo, graphs["OntoCSIRT_v7_real.ttl"])),
         ("producao (reais + adquiridos)", union(base, ext, evo, graphs["OntoCSIRT_v7_real.ttl"],
                                                 graphs["OntoCSIRT_v7_acquired.ttl"])),
-        ("modulo OntoBugBounty", union(base, ext, evo, graphs["ontology/OntoBugBounty.ttl"])),
+        ("modulo OntoBugBounty", union(base, ext, evo, graphs["ontology/OntoBugBounty.ttl"],
+                                        graphs["ontology/bugbounty_refined.ttl"], graphs["ontology/hunter_tools.ttl"])),
     ]
     inferred_base = None
     for name, g in comps:

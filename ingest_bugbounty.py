@@ -55,6 +55,8 @@ ONTO_DIR = os.path.join(HERE, "ontology")
 MODULE = os.path.join(ONTO_DIR, "OntoBugBounty.ttl")
 SHAPES = os.path.join(ONTO_DIR, "shapes_bugbounty.ttl")
 DATA = os.path.join(ONTO_DIR, "OntoBugBounty_data.ttl")
+REFINED = os.path.join(ONTO_DIR, "bugbounty_refined.ttl")   # bb-2 (P1-P19)
+HUNTER = os.path.join(ONTO_DIR, "hunter_tools.ttl")         # ferramentas do hunter (P20-P22)
 EVIDENCE = os.path.join(v7.EVID, "bugbounty.json")
 VRT_URL = "https://raw.githubusercontent.com/bugcrowd/vulnerability-rating-taxonomy/master/vulnerability-rating-taxonomy.json"
 VRT_CACHE = os.path.join(HERE, "cache", "catalogs", "bugcrowd_vrt.json")
@@ -67,9 +69,12 @@ UA = {"User-Agent": "OntoCSIRT-bugbounty/1.0 (research prototype)", "Accept": "a
 # Composicao e validacao
 # =============================================================================================
 def compose(include_data=True, data_path=None, extra=None):
-    """v7 (artigo) + extensao + evolucao + modulo de bug bounty (+ dados) num grafo."""
+    """v7 (artigo) + extensao + evolucao + modulo de bug bounty (bb-1 + lapidacao bb-2 + ferramentas do hunter)
+    (+ dados) num grafo."""
     g = val.with_tbox(Graph())
     g.parse(MODULE, format="turtle")
+    for extra_ttl in (REFINED, HUNTER):
+        g.parse(extra_ttl, format="turtle")
     p = data_path or DATA
     if include_data and os.path.exists(p):
         g.parse(p, format="turtle")

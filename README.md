@@ -53,7 +53,7 @@ docker run --rm --entrypoint python ontocsirt-webhook:7 verificar_ontologia.py
 docker run --rm --entrypoint python ontocsirt-webhook:7 -m pytest -q tests -p no:warnings
 ```
 
-A suíte completa (108 testes, cerca de 7 minutos) é `python -m pytest -q tests`. A secção seguinte mostra como subir o webhook e enviar um alerta real. O relatório da última revisão está em [`docs/RELATORIO_REVISAO_2026-11-04.md`](docs/RELATORIO_REVISAO_2026-11-04.md).
+A suíte completa (164 testes, cerca de 8 minutos) é `python -m pytest -q tests`. A secção seguinte mostra como subir o webhook e enviar um alerta real. O relatório da última revisão está em [`docs/RELATORIO_REVISAO_2026-11-04.md`](docs/RELATORIO_REVISAO_2026-11-04.md).
 
 | Pergunta da banca | Onde ver |
 |---|---|
@@ -135,7 +135,7 @@ python -m pytest -q tests                                                # local
 docker compose run --rm --entrypoint python webhook -m pytest -q tests   # no contentor
 ```
 
-São 108 testes (um deles, sobre permissões de ficheiros POSIX, só corre em Linux, como no contentor), sem rede e sem chaves do Gemini ou da HackerOne. As respostas do Gemini e do NVD vêm de registos reais guardados em `tests/fixtures/` ou de respostas simuladas. O que cobrem:
+São 164 testes (um deles, sobre permissões de ficheiros POSIX, só corre em Linux, como no contentor), sem rede e sem chaves do Gemini ou da HackerOne. As respostas do Gemini e do NVD vêm de registos reais guardados em `tests/fixtures/` ou de respostas simuladas. O que cobrem:
 - os números do artigo (CQ 8/8, regras 20/20, mutações 10/10, LOOCV idêntico consulta a consulta) e o SHA do `OntoCSIRT_v7.ttl`;
 - o portão SHACL + HermiT + Pellet;
 - a aquisição de CVEs e de casos;
